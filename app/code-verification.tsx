@@ -152,7 +152,9 @@ export default function CodeVerificationScreen() {
           {code.map((digit, index) => (
             <TextInput
               key={index}
-              ref={ref => inputRefs.current[index] = ref}
+              ref={(ref: TextInput | null) => {
+                inputRefs.current[index] = ref;
+              }}              
               style={[
                 styles.codeInput,
                 { borderColor: config.colors.secondary },

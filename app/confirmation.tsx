@@ -2,7 +2,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { MOCK_QR_CONFIG } from '../config/mockConfig';
-import { TaktzivitAPI } from '../services/api';
 
 export default function ConfirmationScreen() {
   const router = useRouter();
@@ -27,44 +26,12 @@ export default function ConfirmationScreen() {
     dedication: params.donorDedication as string
   };
   
-  const handlePayment = async () => {
-    setLoading(true);
-    
-    // מעבר למסך טעינה
-    router.push('/processing');
-    
-    try {
-      const intentResponse = await TaktzivitAPI.createIntent({
-        target: target.id,
-        amount,
-        ...donorDetails
-      });
-      
-      const paymentResponse = await TaktzivitAPI.processPayment(
-        intentResponse.intentId,
-        { amount, phone: donorDetails.phone }
-      );
-      
-      if (paymentResponse.success) {
-        router.replace({
-          pathname: '/success',
-          params: {
-            ...params,
-            transactionId: paymentResponse.transactionId
-          }
-        });
-      }
-    } catch (error) {
-      router.replace({
-        pathname: '/error',
-        params: {
-          ...params,
-          errorMessage: error instanceof Error ? error.message : 'שגיאה לא ידועה'
-        }
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handlePayment = () => {
+    // במקום לעבד תשלום, מעבר לבחירת אמצעי תשלום
+    router.push({
+      pathname: '/payment-method',
+      params: { ...params }
+    });
   };
 
   return (
@@ -88,8 +55,34 @@ export default function ConfirmationScreen() {
         <Text style={[styles.summaryAmount, { color: config.colors.secondary }]}>
             ₪{amount}
         </Text>
+        
         </View>
-          
+        {params.isMonthly === 'true' && (
+  <>
+    <View style={styles.detailRow}>
+      <Text style={[styles.detailLabel, { color: config.colors.primary }]}>סוג תרומה:</Text>
+      <Text style={[styles.detailValue, { color: '#16a34a', fontWeight: 'bold' }]}>
+        תרומה חודשית
+      </Text>
+    </View>
+    <View style={styles.detailRow}>
+      <Text style={[styles.detailLabel, { color: config.colors.primary }]}>משך:</Text>
+      <Text style={styles.detailValue}>
+        {params.monthsCount === 'unlimited' 
+          ? 'ללא הגבלה' 
+          : `${params.monthsCount} חודשים`}
+      </Text>
+    </View>
+    {params.monthsCount !== 'unlimited' && (
+      <View style={styles.detailRow}>
+        <Text style={[styles.detailLabel, { color: config.colors.primary }]}>סה״כ:</Text>
+        <Text style={[styles.detailValue, { fontWeight: 'bold', fontSize: 20 }]}>
+          ₪{params.totalAmount}
+        </Text>
+      </View>
+    )}
+  </>
+)}
           <View style={styles.divider} />
           
           <View style={styles.detailsSection}>
@@ -214,9 +207,9 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row-reverse', justifyContent: 'space-between' },
   detailLabel: { fontSize: 16, fontWeight: '600' },
   detailValue: { fontSize: 16, color: '#374151' },
-  dedicationSection: { paddingTop: 15, borderTopWidth: 1, borderTopColor: '#e5e7eb' },
-  dedicationBox: { backgroundColor: '#f9fafb', padding: 15, borderRadius: 10, marginTop: 10 },
-  dedicationText: { fontSize: 14, textAlign: 'right' },
+  dedicationSection: { paddingTop: 15, borderTopWidth: 1, borderTopColor: '#e5e7eb', alignItems: 'flex-end' },
+  dedicationBox: { backgroundColor: '#f9fafb', padding: 15, borderRadius: 10, marginTop: 10, width: '100%' },
+  dedicationText: { fontSize: 16, textAlign: 'right', lineHeight: 24 },
   termsBox: {
     backgroundColor: 'white',
     borderRadius: 15,

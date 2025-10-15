@@ -80,7 +80,7 @@ export default function DetailsScreen() {
           <View style={[styles.verifiedBanner, { backgroundColor: '#dcfce7', borderColor: '#16a34a' }]}>
             <Text style={styles.verifiedIcon}>✓</Text>
             <View style={styles.verifiedTextContainer}>
-              <Text style={styles.verifiedTitle}>זיהינו אותך!</Text>
+              <Text style={styles.verifiedTitle}>אנחנו כבר מכירים:)</Text>
               <Text style={styles.verifiedSubtitle}>בדוק את הפרטים ועדכן במידת הצורך</Text>
             </View>
           </View>
@@ -191,7 +191,7 @@ export default function DetailsScreen() {
           style={[styles.continueButton, { backgroundColor: config.colors.primary }]}
           onPress={handleSubmit}
         >
-          <Text style={styles.continueText}>לתשלום</Text>
+          <Text style={styles.continueText}>המשך</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

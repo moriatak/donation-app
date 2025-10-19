@@ -1,19 +1,36 @@
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import InfoAlertModal from '@/components/InfoAlertModal';
+import SuccessModal from '@/components/SuccessModal';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Platform, ScrollView, StatusBar, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StatusBar, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import IconSelector from '../components/IconSelector';
 import { DonationTarget, MOCK_QR_CONFIG, SynagogueConfig } from '../config/mockConfig';
 
 export default function AdminSettingsScreen() {
   const router = useRouter();
   const [editConfig, setEditConfig] = useState<SynagogueConfig>(MOCK_QR_CONFIG);
   const config = MOCK_QR_CONFIG;
+  // מוסיפים סטייט לניהול מצב המודאל
+  const [iconSelectorVisible, setIconSelectorVisible] = useState(false);
+  const [selectedTargetIndex, setSelectedTargetIndex] = useState(0);
+  const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
+  const [targetToDeleteIndex, setTargetToDeleteIndex] = useState<number | null>(null);
+  const [infoAlertVisible, setInfoAlertVisible] = useState<boolean>(false);
+  const [alertInfo, setAlertInfo] = useState<{ title: string; message: string }>({ 
+    title: '', 
+    message: '' 
+  });
+  const [successModalVisible, setSuccessModalVisible] = useState<boolean>(false);
 
-  const handleSaveConfig = () => {
-    Alert.alert(
-      'הצלחה! ✅', 
-      'כל ההגדרות נשמרו בהצלחה במערכת',
-      [{ text: 'סגור', onPress: () => router.push('/') }]
-    );
+  const handleSaveConfig = async () => {
+    try {
+      // שמירת הנתונים...
+      
+      setSuccessModalVisible(true);
+    } catch (error) {
+      // טיפול בשגיאות...
+    }
   };
 
   const handleAddTarget = () => {
@@ -30,28 +47,17 @@ export default function AdminSettingsScreen() {
 
   const handleRemoveTarget = (index: number) => {
     if (editConfig.donation_targets.length <= 1) {
-      Alert.alert('שים לב', 'חייב להיות לפחות יעד תרומה אחד במערכת');
-      return;
-    }
+    // במקום להשתמש ב-Alert, הצג את המודאל המותאם אישית
+    setAlertInfo({
+      title: 'שים לב',
+      message: 'חייב להיות לפחות יעד תרומה אחד במערכת'
+    });
+    setInfoAlertVisible(true);
+    return;
+  }
     
-    Alert.alert(
-      'מחיקת יעד',
-      'האם אתה בטוח שברצונך למחוק יעד זה?',
-      [
-        { text: 'ביטול', style: 'cancel' },
-        { 
-          text: 'מחק', 
-          style: 'destructive',
-          onPress: () => {
-            const newTargets = editConfig.donation_targets.filter((_, i) => i !== index);
-            setEditConfig({
-              ...editConfig,
-              donation_targets: newTargets
-            });
-          }
-        }
-      ]
-    );
+    setTargetToDeleteIndex(index);
+    setDeleteModalVisible(true);
   };
 
   const handleTargetChange = (index: number, field: keyof DonationTarget, value: string) => {
@@ -63,6 +69,44 @@ export default function AdminSettingsScreen() {
     });
   };
 
+  // פונקציה לטיפול בלחיצה על אייקון
+const handleIconPress = (index: number): void => {
+  setSelectedTargetIndex(index);
+  setIconSelectorVisible(true);
+};
+
+// פונקציה לבחירת אייקון
+const handleIconSelect = (icon: string): void => {
+  if (selectedTargetIndex !== null) {
+    handleTargetChange(selectedTargetIndex, 'icon', icon);
+  }
+};
+// פונקציה לסגירת מודאל ההתראה
+const closeInfoAlert = (): void => {
+  setInfoAlertVisible(false);
+};
+
+// פונקציה חדשה לאישור המחיקה
+const confirmDeleteTarget = (): void => {
+  if (targetToDeleteIndex !== null) {
+    const newTargets = editConfig.donation_targets.filter((_, i) => i !== targetToDeleteIndex);
+    setEditConfig({
+      ...editConfig,
+      donation_targets: newTargets
+    });
+    
+    // סגור את המודאל לאחר המחיקה
+    setDeleteModalVisible(false);
+    setTargetToDeleteIndex(null);
+  }
+};
+
+// הפונקציה שתופעל כשלוחצים על הכפתור במודאל
+const handleSuccessModalClose = () => {
+  setSuccessModalVisible(false);
+  router.push('/Home');
+};
+
   return (
     <View style={[styles.container, { backgroundColor: config.colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={config.colors.primary} />
@@ -71,7 +115,7 @@ export default function AdminSettingsScreen() {
       <View style={[styles.header, { backgroundColor: config.colors.primary }]}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => router.push('/Home')}
         >
           <Text style={styles.backButtonText}>← חזור</Text>
         </TouchableOpacity>
@@ -137,14 +181,12 @@ export default function AdminSettingsScreen() {
           {editConfig.donation_targets.map((target, index) => (
             <View key={target.id} style={styles.targetRow}>
               <View style={styles.targetInputs}>
-                <TextInput
-                  style={styles.iconInput}
-                  value={target.icon}
-                  onChangeText={(text) => handleTargetChange(index, 'icon', text)}
-                  placeholder="🏛️"
-                  placeholderTextColor="#999"
-                  textAlign="center"
-                />
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => handleIconPress(index)}
+                >
+                  <Text style={styles.iconText}>{target.icon}</Text>
+                </TouchableOpacity>
                 
                 <TextInput
                   style={styles.targetNameInput}
@@ -283,6 +325,45 @@ export default function AdminSettingsScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+      
+      {/* מודאל בחירת אייקון ליעד תרומה */}
+      <IconSelector 
+        visible={iconSelectorVisible}
+        onSelect={handleIconSelect}
+        onClose={() => setIconSelectorVisible(false)}
+      />
+
+      {/* מודאל התראה */}
+      <InfoAlertModal
+        visible={infoAlertVisible}
+        title={alertInfo.title}
+        message={alertInfo.message}
+        onClose={closeInfoAlert}
+        primaryColor={config.colors.secondary} // אפשר להשתמש בצבע משני מהקונפיג
+      />
+
+      {/* מודאל מחיקת יעד */}
+      <DeleteConfirmationModal
+        visible={deleteModalVisible}
+        itemName={targetToDeleteIndex !== null ? editConfig.donation_targets[targetToDeleteIndex].name || "יעד ללא שם" : ""}
+        onConfirm={confirmDeleteTarget}
+        onCancel={() => {
+          setDeleteModalVisible(false);
+          setTargetToDeleteIndex(null);
+        }}
+        primaryColor={config.colors.primary} 
+      />
+
+      {/* מודאל הצלחה */}
+      <SuccessModal
+        visible={successModalVisible}
+        title="הצלחה! ✅"
+        message="כל ההגדרות נשמרו בהצלחה במערכת"
+        buttonText="סגור"
+        onButtonPress={handleSuccessModalClose}
+        primaryColor={config.colors.primary} // אם יש צבע הצלחה בקונפיג
+      />
+
     </View>
   );
 }
@@ -462,4 +543,16 @@ const styles = StyleSheet.create({
   },
   saveButtonText: { color: 'white', fontSize: 22, fontWeight: 'bold' },
   bottomSpacer: { height: 40 },
+  iconText: {
+    fontSize: 24,
+  },
+  iconButton: {
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+    marginRight: 10,
+  },
 });

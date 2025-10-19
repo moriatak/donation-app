@@ -29,7 +29,7 @@ export default function GabbaiPhoneVerification() {
         params: { phone }
       });
     } else {
-      setError('מספר טלפון לא מורשה לגישה למערכת');
+      setError('אין לך הרשאה לגשת למערכת');
     }
   };
 

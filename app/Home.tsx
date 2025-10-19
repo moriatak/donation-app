@@ -1,30 +1,58 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import HebrewDate from '../components/HebrewDate';
-import { MOCK_QR_CONFIG } from '../config/mockConfig';
+import { MOCK_QR_CONFIG, SynagogueConfig } from '../config/mockConfig';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const config = MOCK_QR_CONFIG;
+  const [config, setConfig] = useState(MOCK_QR_CONFIG);
+  const [logoError, setLogoError] = useState(false);
+
+  const handleConfigSave = (newConfig: SynagogueConfig) => {
+    setConfig(newConfig);
+    // שמירה ל-AsyncStorage אם צריך
+  };
+
+  const handlePhoneIconPress = () => {
+    router.push('/gabbai-phone-verification');
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: config.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={config.colors.background} />
       
       <View style={styles.header}>
-        <Text style={styles.headerIcon}>📱</Text>
+        <TouchableOpacity onPress={handlePhoneIconPress}>
+          {/* <Text style={styles.headerIcon}>📱</Text> */}
+          <Text style={styles.headerIcon}>⚙️</Text>
+        </TouchableOpacity>
         <HebrewDate config={config} />
       </View>
       
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.logoSection}>
-          {config.synagogue.logo_url && (
+          {config.synagogue.logo_url && !logoError ? (
             <Image
-              source={{ uri: config.synagogue.logo_url }}
+              source={{ 
+                uri: config.synagogue.logo_url,
+                headers: {
+                  'Accept': '*/*',
+                  'User-Agent': 'Mozilla/5.0'
+                }
+              }}
               style={styles.logo}
               resizeMode="contain"
+              onError={(e) => {
+                console.log('שגיאה בלוגו:', e.nativeEvent.error);
+                setLogoError(true);
+              }}
+              onLoad={() => console.log('לוגו נטען')}
             />
+          ) : (
+            <View style={styles.logoFallback}>
+              <Text style={styles.logoFallbackText}>🕍</Text>
+            </View>
           )}
           <Text style={[styles.synagogueName, { color: config.colors.primary }]}>
             {config.synagogue.name}
@@ -39,6 +67,7 @@ export default function HomeScreen() {
           <Text style={styles.donationButtonText}>תרומה חדשה</Text>
         </TouchableOpacity>
       </ScrollView>
+
     </View>
   );
 }
@@ -93,5 +122,17 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  logoFallback: {
+    width: 300,
+    height: 120,
+    marginBottom: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f3f4f6',
+    borderRadius: 15,
+  },
+  logoFallbackText: {
+    fontSize: 60,
   },
 });

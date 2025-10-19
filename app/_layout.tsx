@@ -22,6 +22,9 @@ export default function RootLayout() {
       <Stack.Screen name="processing" />
       <Stack.Screen name="success" />
       <Stack.Screen name="error" />
+      <Stack.Screen name="gabbai-phone-verification" />
+      <Stack.Screen name="gabbai-code-verification" />
+      <Stack.Screen name="admin-settings" />
     </Stack>
   );
 }

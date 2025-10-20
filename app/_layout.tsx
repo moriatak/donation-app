@@ -8,6 +8,7 @@ export default function RootLayout() {
         contentStyle: { backgroundColor: '#ffffff' }
       }}
     >
+      <Stack.Screen name="login" />
       <Stack.Screen name="index" />
       <Stack.Screen name="home" />
       <Stack.Screen name="target-selection" />

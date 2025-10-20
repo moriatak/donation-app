@@ -13,13 +13,13 @@ export default function PaymentMethodScreen() {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
 
   const paymentMethods = [
-    {
+    ...(config.settings?.bit_option ? [{
       id: 'bit' as PaymentMethod,
       name: 'ביט',
       icon: '💳',
       description: 'תשלום מהיר דרך אפליקציית ביט',
       color: '#0099FF'
-    },
+    }] : []),
     {
       id: 'credit-tap' as PaymentMethod,
       name: 'אשראי בטאץ׳',

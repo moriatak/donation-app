@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   codeContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 10,
     marginBottom: 15,
   },

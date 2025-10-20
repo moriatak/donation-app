@@ -28,7 +28,7 @@ export default function SuccessScreen() {
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
-          router.replace('/Home');
+          clearInterval(timer); // עצור את הטיימר כשמגיעים ל-0
           return 0;
         }
         return prev - 1;
@@ -37,6 +37,13 @@ export default function SuccessScreen() {
     
     return () => clearInterval(timer);
   }, []);
+  
+  // הוסף useEffect נפרד שמטפל בניווט כאשר countdown מגיע ל-0
+  useEffect(() => {
+    if (countdown === 0) {
+      router.replace('/Home');
+    }
+  }, [countdown, router]);
   
   const sendReceipt = async (method: 'sms' | 'email') => {
     const contact = method === 'sms' ? donorDetails.phone : donorDetails.email;

@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MOCK_QR_CONFIG } from '../config/mockConfig';
@@ -7,6 +7,7 @@ const GABBAI_PHONE = "0585727870";
 
 export default function GabbaiPhoneVerification() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const config = MOCK_QR_CONFIG;
   
   const [phone, setPhone] = useState('');
@@ -26,7 +27,7 @@ export default function GabbaiPhoneVerification() {
     if (phone === GABBAI_PHONE) {
       router.push({
         pathname: '/gabbai-code-verification',
-        params: { phone }
+        params: { ...params, phone }
       });
     } else {
       setError('אין לך הרשאה לגשת למערכת');
@@ -49,10 +50,10 @@ export default function GabbaiPhoneVerification() {
         </View>
         
         <Text style={[styles.description, { color: config.colors.primary }]}>
-          ברוך הבא, כבוד הגבאי
+          ברוך הבא למערכת גבאים 
         </Text>
         <Text style={styles.subdescription}>
-          אנא הזן את מספר הטלפון שלך לכניסה למערכת ההגדרות
+          אנא הזן את מספר הטלפון שלך לכניסה למערכת
         </Text>
         
         <View style={styles.inputGroup}>

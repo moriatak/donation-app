@@ -15,6 +15,7 @@ export interface SynagogueConfig {
     auto_return_seconds: number;
     idle_timeout_seconds: number;
     require_id: boolean;
+    bit_option: boolean;
   };
 }
 
@@ -45,6 +46,7 @@ export const MOCK_QR_CONFIG: SynagogueConfig = {
   settings: {
     auto_return_seconds: 60,
     idle_timeout_seconds: 120,
-    require_id: false
+    require_id: false,
+    bit_option: true
   }
 };

@@ -161,6 +161,13 @@ export default function LoginScreen() {
               console.log('Updated synagogue name to:', kupaData.kupaKabalaName);
             }
 
+            // אפשר להוסיף עוד שדות שרוצים לעדכן כאן
+            if (kupaData.kupaLogoUrl) {
+              config.synagogue.logo_url = kupaData.kupaLogoUrl;
+            }
+            
+            // עדכון הגדרות
+
             // עדכון אפשרות תשלום בביט
             if (kupaData.bitOption && kupaData.bitOption == true) {
                 config.settings.bit_option = true;
@@ -170,9 +177,21 @@ export default function LoginScreen() {
                 console.log('Updated settings bitOption to:', false);
             }
             
-            // אפשר להוסיף עוד שדות שרוצים לעדכן כאן
-            if (kupaData.kupaLogoUrl) {
-              config.synagogue.logo_url = kupaData.kupaLogoUrl;
+            // עדכון מזהה חברה
+            if (kupaData.companyId) {
+              config.settings.companyId = kupaData.companyId;
+            }
+            // עדכון מזהה קמפיין
+            if (kupaData.compId) {
+              config.settings.copmainingId = kupaData.compId;
+            }
+            // עדכון טוקן קמפיין
+            if (kupaData.compToken) {
+              config.settings.copmainingToken = kupaData.compToken;
+            }
+            // עדכון שם מסוף
+            if (kupaData.terminalName) {
+              config.settings.terminalName = kupaData.terminalName;
             }
             
             // עדכון צבעים אם קיימים

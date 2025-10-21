@@ -1,7 +1,8 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MOCK_QR_CONFIG } from '../config/mockConfig';
+import { usePaymentContext } from '../context/PaymentContext';
 
 export default function CreditCardManualScreen() {
   const router = useRouter();
@@ -17,6 +18,18 @@ export default function CreditCardManualScreen() {
   });
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
+  const { setSensitiveCardData } = usePaymentContext();
+
+  // איפוס מצב הטעינה בעת חזרה לעמוד 
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        // כאשר יוצאים מהעמוד, נאפס את הלודינג כדי שבעת החזרה הכפתור יהיה לחיץ
+        setLoading(false);
+      };
+    }, [])
+  );
+
 
   const formatCardNumber = (text: string) => {
     const cleaned = text.replace(/\s/g, '');
@@ -75,12 +88,20 @@ export default function CreditCardManualScreen() {
     if (!validateCard()) return;
     
     setLoading(true);
+    // שמירת הנתונים הרגישים ב-Context
+    setSensitiveCardData({
+      cardNumber: cardData.cardNumber.replace(/\s/g, ''),
+      cardHolder: cardData.cardHolder,
+      expiry: cardData.expiry,
+      cvv: cardData.cvv,
+      idNumber: cardData.idNumber
+    });
     
     // סימולציה: עיבוד תשלום
     setTimeout(() => {
       router.push({
         pathname: '/processing',
-        params: { ...params }
+        params: { ...params, paymentMethod: 'credit_card' }
       });
     }, 1000);
   };
@@ -207,12 +228,12 @@ export default function CreditCardManualScreen() {
           {errors.idNumber && <Text style={styles.errorText}>{errors.idNumber}</Text>}
         </View>
         
-        <View style={styles.secureBox}>
+        {/* <View style={styles.secureBox}>
           <Text style={styles.secureIcon}>🔒</Text>
           <Text style={styles.secureText}>
             פרטי הכרטיס מוצפנים ומאובטחים בתקן PCI-DSS
           </Text>
-        </View>
+        </View> */}
         
         <TouchableOpacity
           style={[
@@ -224,7 +245,8 @@ export default function CreditCardManualScreen() {
           disabled={loading}
         >
           <Text style={styles.submitButtonText}>
-            {loading ? 'מעבד...' : 'אשר תשלום'}
+            {'אשר תשלום'}
+            {/* {loading ? 'מעבד...' : 'אשר תשלום'} */}
           </Text>
         </TouchableOpacity>
       </ScrollView>

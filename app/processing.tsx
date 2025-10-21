@@ -2,34 +2,53 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { MOCK_QR_CONFIG } from '../config/mockConfig';
+import { usePaymentContext } from '../context/PaymentContext';
 import { TaktzivitAPI } from '../services/api';
 
 export default function ProcessingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const config = MOCK_QR_CONFIG;
+  const { sensitiveCardData, setSensitiveCardData } = usePaymentContext();
 
   useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      router.replace({
+        pathname: '/error',
+        params: {
+          ...params,
+          errorMessage: 'זמן העיבוד פג, אנא נסה שנית'
+        }
+      });
+    }, 30000); // 30 שניות טיימאאוט
+    
     processPayment();
+    
+    // ניקוי המידע הרגיש לאחר השימוש
+    return () => {
+      clearTimeout(timeoutId)
+      setSensitiveCardData(null);
+    };
   }, []);
 
   const processPayment = async () => {
     try {
-      const intentResponse = await TaktzivitAPI.createIntent({
-        target: params.targetId as string,
-        amount: params.amount as string,
-        name: params.donorName as string,
-        phone: params.donorPhone as string,
-        idNumber: params.donorId as string,
-        email: params.donorEmail as string,
-        dedication: params.donorDedication as string
-      });
-      
+      if (!sensitiveCardData) {
+        throw new Error('פרטי כרטיס האשראי חסרים');
+      }
+
       const paymentResponse = await TaktzivitAPI.processPayment(
-        intentResponse.intentId,
         { 
           amount: params.amount as string, 
-          phone: params.donorPhone as string 
+          phone: params.donorPhone as string,
+          donorName: params.donorName as string,
+          donorEmail: params.donorEmail as string || '',  // מטפל במקרה שהשדה לא קיים
+          donorPhone: params.donorPhone as string,
+          targetId: params.targetId as string,
+          targetName: params.targetName as string,
+          paymentMethod: params.paymentMethod as string,
+          cardData: sensitiveCardData
+          
         }
       );
       

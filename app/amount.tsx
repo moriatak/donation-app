@@ -271,7 +271,8 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    // justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     marginBottom: 20,
   },
   amountButton: {
@@ -279,6 +280,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 20,
     borderRadius: 15,
+    margin: 9,
     marginBottom: 10,
     alignItems: 'center',
     borderWidth: 2,

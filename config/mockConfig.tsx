@@ -12,6 +12,10 @@ export interface SynagogueConfig {
     background: string;
   };
   settings: {
+    companyId: string,
+    copmainingId: string,
+    copmainingToken: string,
+    terminalName: string,
     auto_return_seconds: number;
     idle_timeout_seconds: number;
     require_id: boolean;
@@ -44,6 +48,10 @@ export const MOCK_QR_CONFIG: SynagogueConfig = {
     background: "#F7F7F7"
   },
   settings: {
+    companyId: '',
+    copmainingId: '',
+    copmainingToken: '',
+    terminalName: '',
     auto_return_seconds: 60,
     idle_timeout_seconds: 120,
     require_id: false,

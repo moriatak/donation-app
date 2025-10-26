@@ -1,6 +1,12 @@
 export const Validators = {
-  name: (name: string): string => {
-    if (!name) return 'נדרש שם מלא';
+  firstName: (name: string): string => {
+    if (!name) return 'נדרש שם פרטי';
+    if (name.length < 2) return 'שם חייב להכיל לפחות 2 תווים';
+    return '';
+  },
+  
+  lastName: (name: string): string => {
+    if (!name) return 'נדרש שם משפחה';
     if (name.length < 2) return 'שם חייב להכיל לפחות 2 תווים';
     return '';
   },

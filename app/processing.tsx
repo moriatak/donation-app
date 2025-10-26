@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useId } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { MOCK_QR_CONFIG } from '../config/mockConfig';
 import { usePaymentContext } from '../context/PaymentContext';
@@ -10,6 +10,8 @@ export default function ProcessingScreen() {
   const params = useLocalSearchParams();
   const config = MOCK_QR_CONFIG;
   const { sensitiveCardData, setSensitiveCardData } = usePaymentContext();
+  const reactId = useId();
+  const transactionId = `TRX_${Date.now()}_${reactId.replace(/:/g, '')}`;
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -41,12 +43,14 @@ export default function ProcessingScreen() {
         { 
           amount: params.amount as string, 
           phone: params.donorPhone as string,
-          donorName: params.donorName as string,
+          donorFirstName: params.donorFirstName as string,
+          donorLastName: params.donorLastName as string,
           donorEmail: params.donorEmail as string || '',  // מטפל במקרה שהשדה לא קיים
           donorPhone: params.donorPhone as string,
           targetId: params.targetId as string,
           targetName: params.targetName as string,
           paymentMethod: params.paymentMethod as string,
+          transactionId: transactionId as string,
           cardData: sensitiveCardData
           
         }

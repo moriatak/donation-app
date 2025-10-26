@@ -2,7 +2,6 @@ export interface SynagogueConfig {
   synagogue: {
     name: string;
     logo_url: string;
-    api_base: string;
   };
   donation_targets: DonationTarget[];
   quick_amounts: number[];
@@ -33,7 +32,6 @@ export const MOCK_QR_CONFIG: SynagogueConfig = {
   synagogue: {
     name: "בית שלמה ויעקב - בית הכנסת הקהילתי",
     logo_url: "https://service.taktzivit.co.il/N1/CampImage/company_logos/244.jpg",
-    api_base: "https://api.taktzivit.co.il/v1"
   },
   donation_targets: [
     { id: "general", name: "קופה כללית", icon: "🏛️" },

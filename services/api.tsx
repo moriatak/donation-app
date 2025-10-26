@@ -40,30 +40,29 @@ export const TaktzivitAPI = {
     paymentDataToPAy: { 
       amount: string | number; 
       phone: string;
-      donorName: string;
+      donorFirstName: string;
+      donorLastName: string;
       donorEmail: string;
       donorPhone: string;
       targetId: string;
       targetName: string;
       paymentMethod: string;
-      cardData: {
+      transactionId: string;
+      cardData?: {
         cardNumber: string;
         expiry: string;
         cvv: string;
         idNumber: string;
-      }
+      } | null
     }
-  ): Promise<PaymentResponse> => {
+  ): Promise<PaymentResponse | any> => {
     try {
       // יצירת אובייקט הבקשה שיישלח
       const requestBody = {
-        companyId: 62,
-        // companyId: config.settings.companyId,
-        // token: config.settings.copmainingToken,
-        token: 'Y7U',
-        parentName: 'kupa_terminal_1',
-        copmainingToken: 13713, // Campaign ID
-        // copmainingToken: config.settings.copmainingId, // Campaign ID
+        companyId: config.settings.companyId,
+        token: config.settings.copmainingToken,
+        parentName: paymentDataToPAy.transactionId,
+        copmainingToken: config.settings.copmainingId, // Campaign ID
         source: 'android', // חשוב! חייב להיות android
         
         paymentMethod: { 
@@ -71,7 +70,8 @@ export const TaktzivitAPI = {
         },
         
         customerData: {
-          name: paymentDataToPAy.donorName,
+          firstname: paymentDataToPAy.donorFirstName,
+          lastname: paymentDataToPAy.donorLastName,
           email: paymentDataToPAy.donorEmail,
           phone: paymentDataToPAy.donorPhone
         },
@@ -79,23 +79,23 @@ export const TaktzivitAPI = {
         transaction: {
           items: [
             { 
-              itemId: '192', 
+              itemId: '3', // גדרה
+              // itemId: '305', // מעמק
               // itemId: String(paymentData.targetId), 
               name: paymentDataToPAy.targetName, 
-              // unitAmount: Number(paymentDataToPAy.amount), 
-              unitAmount: 1, 
+              unitAmount: Number(paymentDataToPAy.amount), 
               quantity: 1 
             }
           ]
         },
-        
+        // todo ----> להוסיף בדיקה מה סוג השליחה ואם צריך להיות פרטי אשראי, לבדוק שבאמת יש
         // פרטי כרטיס אשראי - רק לאנדרואיד!
-        paymentData: {
-          creditCard: paymentDataToPAy.cardData.cardNumber,      // מספר כרטיס
-          creditCardDateMmYy: paymentDataToPAy.cardData.expiry,  // תוקף MM/YY
-          cvv2: paymentDataToPAy.cardData.cvv,                  // CVV
-          id: paymentDataToPAy.cardData.idNumber               // ת.ז של בעל הכרטיס
-        }
+        paymentData: paymentDataToPAy.cardData ? {
+          creditCard: paymentDataToPAy.cardData.cardNumber,
+          creditCardDateMmYy: paymentDataToPAy.cardData.expiry,
+          cvv2: paymentDataToPAy.cardData.cvv,
+          id: paymentDataToPAy.cardData.idNumber
+        } : undefined  // או אפשר לא לכלול בכלל את paymentData אם אין cardData
       };
 
       // יצירת עותק של הבקשה להדפסת לוג עם הסתרת פרטים רגישים
@@ -142,21 +142,32 @@ export const TaktzivitAPI = {
       console.log('=================================');
 
       if (result.success) {
-        // בדיקת קוד אישור
-        if (result.shvaCode && result.shvaCode.startsWith('000')) {
-          console.log('התשלום אושר!');
-          console.log('קוד אישור:', result.shvaCode);
-          
-          return { 
-            success: true, 
-            transactionId: result.transactionId || ('TRX' + Date.now()), 
-            status: 'completed',
-            shvaCode: result.shvaCode
-          };
-        } else {
-          console.log('התשלום נדחה:', result.shvaCode);
-          throw new Error(`תקלה בעיבוד התשלום. קוד שב"א: ${result.shvaCode}`);
+        
+        switch (paymentDataToPAy.paymentMethod) {
+          case 'credit-tap':
+            if (result.shvaCode && result.shvaCode.startsWith('000')) {
+              console.log('התשלום אושר!');
+              console.log('קוד אישור:', result.shvaCode);
+              
+              return { 
+                success: true, 
+                transactionId: result.transactionId || ('TRX' + Date.now()), 
+                status: 'completed',
+                shvaCode: result.shvaCode
+              };
+            } else {
+              console.log('התשלום נדחה:', result.shvaCode);
+              throw new Error(`תקלה בעיבוד התשלום. קוד שב"א: ${result.shvaCode}`);
+            }
+        
+          case 'bit':
+            return result;
+
+        
+          default:
+            throw new Error('אמצעי תשלום לא נתמך');
         }
+
       } else {
         throw new Error(result && result.message ? `שגיאת תשלום: ${result.message}` : 
   (result && result.error ? `שגיאת תשלום: ${result.error}` : 'תקלה בעיבוד התשלום'));
@@ -178,9 +189,9 @@ export const TaktzivitAPI = {
 export const DonorAPI = {
   checkDonorExists: async (phone: string): Promise<{ exists: boolean }> => {
     await new Promise(resolve => setTimeout(resolve, 800));
-    // סימולציה: אם הטלפון מסתיים ב-5 או 0, התורם קיים
+    // סימולציה: אם הטלפון מסתיים ב-3 או 0, התורם קיים
     const lastDigit = phone.slice(-1);
-    return { exists: lastDigit === '5' || lastDigit === '0' };
+    return { exists: lastDigit === '3' || lastDigit === '0' };
   },
   
   sendVerificationCode: async (phone: string): Promise<{ success: boolean; expiresIn: number }> => {
@@ -192,7 +203,8 @@ export const DonorAPI = {
   verifyCode: async (phone: string, code: string): Promise<{
     success: boolean;
     donorData?: {
-      name: string;
+      firstName: string;
+      lastName: string;
       phone: string;
       idNumber: string;
       email: string;
@@ -205,10 +217,11 @@ export const DonorAPI = {
       return {
         success: true,
         donorData: {
-          name: 'יוסי כהן',
+          firstName: 'אילון',
+          lastName: 'זילבר',
           phone: phone,
-          idNumber: '123456789',
-          email: 'yossi@example.com'
+          idNumber: '',
+          email: 'ayalon@example.com'
         }
       };
     }

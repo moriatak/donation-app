@@ -46,7 +46,7 @@ export default function PaymentMethodScreen() {
     if (selectedMethod === 'bit') {
       router.push({
         pathname: '/bit-payment',
-        params: { ...params }
+        params: { ...params, paymentMethod: 'bit' }
       });
     } else if (selectedMethod === 'credit-manual') {
       router.push({

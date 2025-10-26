@@ -67,7 +67,8 @@ export default function CodeVerificationScreen() {
           params: {
             ...params,
             phone: result.donorData.phone,
-            donorName: result.donorData.name,
+            donorFirstName: result.donorData.firstName,
+            donorLastName: result.donorData.lastName,
             donorId: result.donorData.idNumber,
             donorEmail: result.donorData.email,
             isPhoneLocked: 'true',

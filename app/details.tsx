@@ -5,7 +5,8 @@ import { MOCK_QR_CONFIG } from '../config/mockConfig';
 import { Validators } from '../services/validators';
 
 interface FormData {
-  name: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   idNumber: string;
   email: string;
@@ -13,7 +14,8 @@ interface FormData {
 }
 
 interface Errors {
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
   idNumber?: string;
   email?: string;
@@ -29,7 +31,8 @@ export default function DetailsScreen() {
   const isPhoneLocked = params.isPhoneLocked === 'true';
   
   const [formData, setFormData] = useState<FormData>({
-    name: (params.donorName as string) || '',
+    firstName: (params.donorFirstName as string) || '',
+    lastName: (params.donorLastName as string) || '',
     phone: (params.phone as string) || '',
     idNumber: (params.donorId as string) || '',
     email: (params.donorEmail as string) || '',
@@ -39,7 +42,8 @@ export default function DetailsScreen() {
   
   const handleSubmit = () => {
     const newErrors: Errors = {
-      name: Validators.name(formData.name),
+      firstName: Validators.firstName(formData.firstName),
+      lastName: Validators.lastName(formData.lastName),
       phone: Validators.phone(formData.phone),
       idNumber: Validators.israeliId(formData.idNumber),
       email: Validators.email(formData.email)
@@ -53,7 +57,8 @@ export default function DetailsScreen() {
         pathname: '/confirmation',
         params: { 
           ...params,
-          donorName: formData.name,
+          donorFirstName: formData.firstName,
+          donorLastName: formData.lastName,
           donorPhone: formData.phone,
           donorId: formData.idNumber,
           donorEmail: formData.email,
@@ -88,20 +93,38 @@ export default function DetailsScreen() {
         
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: config.colors.primary }]}>
-            שם מלא <Text style={styles.required}>*</Text>
+            שם פרטי <Text style={styles.required}>*</Text>
           </Text>
           <TextInput
             style={[
               styles.input,
-              { borderColor: errors.name ? '#ef4444' : config.colors.secondary },
+              { borderColor: errors.firstName ? '#ef4444' : config.colors.secondary },
               isVerified && { backgroundColor: '#f0fdf4' }
             ]}
-            value={formData.name}
-            onChangeText={(text) => setFormData({ ...formData, name: text })}
-            placeholder="הזן שם מלא"
+            value={formData.firstName}
+            onChangeText={(text) => setFormData({ ...formData, firstName: text })}
+            placeholder="הזן שם פרטי"
             textAlign="right"
           />
-          {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+          {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, { color: config.colors.primary }]}>
+            שם משפחה <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              { borderColor: errors.lastName ? '#ef4444' : config.colors.secondary },
+              isVerified && { backgroundColor: '#f0fdf4' }
+            ]}
+            value={formData.lastName}
+            onChangeText={(text) => setFormData({ ...formData, lastName: text })}
+            placeholder="הזן שם משפחה"
+            textAlign="right"
+          />
+          {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
         </View>
         
         <View style={styles.inputGroup}>

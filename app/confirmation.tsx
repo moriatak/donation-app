@@ -19,7 +19,8 @@ export default function ConfirmationScreen() {
   
   const amount = params.amount as string;
   const donorDetails = {
-    name: params.donorName as string,
+    firstName: params.donorFirstName as string,
+    lastName: params.donorLastName as string,
     phone: params.donorPhone as string,
     idNumber: params.donorId as string,
     email: params.donorEmail as string,
@@ -88,7 +89,7 @@ export default function ConfirmationScreen() {
           <View style={styles.detailsSection}>
             <View style={styles.detailRow}>
               <Text style={[styles.detailLabel, { color: config.colors.primary }]}>שם:</Text>
-              <Text style={styles.detailValue}>{donorDetails.name}</Text>
+              <Text style={styles.detailValue}>{donorDetails.firstName} {donorDetails.lastName}</Text>
             </View>
             
             <View style={styles.detailRow}>

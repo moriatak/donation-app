@@ -92,7 +92,7 @@ export default function CreditCardManualScreen() {
     setSensitiveCardData({
       cardNumber: cardData.cardNumber.replace(/\s/g, ''),
       cardHolder: cardData.cardHolder,
-      expiry: cardData.expiry,
+      expiry: cardData.expiry.replace(/\//g, ''),
       cvv: cardData.cvv,
       idNumber: cardData.idNumber
     });

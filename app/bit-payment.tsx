@@ -17,6 +17,7 @@ export default function BitPaymentScreen() {
   const [pollingCount, setPollingCount] = useState(0); 
   const reactId = useId();
   const transactionId = `TRX_${Date.now()}_${reactId.replace(/:/g, '')}`;
+  const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
 
   const hasNavigatedRef = useRef(false);
 
@@ -171,6 +172,30 @@ export default function BitPaymentScreen() {
         <WebView
           source={{ uri: paymentUrl }}
           style={styles.webview}
+          // בלחיצה על איקס בתוך החלק של ביט, יחזיר אחורה לבחירת אמצעי תשלום
+          onNavigationStateChange={(navState) => {
+            // עדכן את ההיסטוריה
+            setNavigationHistory(prev => [...prev, navState.url]);
+            // בדוק אם המשתמש ביטל
+            if (navState.canGoBack === false && navigationHistory.length > 1) {
+              // המשתמש חזר לדף הראשון - סימן לביטול
+              if (!hasNavigatedRef.current) {
+                hasNavigatedRef.current = true;
+                setPolling(false);
+                router.back();
+              }
+            }
+            // בדוק URL ספציפיים של ביטול
+            if (navState.url.includes('cancel') || 
+                navState.url.includes('abort') ||
+                navState.url === 'about:blank') {
+              if (!hasNavigatedRef.current) {
+                hasNavigatedRef.current = true;
+                setPolling(false);
+                router.back();
+              }
+            }
+          }}
           startInLoadingState={true}
           renderLoading={() => (
             <View style={styles.webviewLoading}>

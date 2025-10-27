@@ -68,7 +68,9 @@ export default function SuccessScreen() {
           <Text style={styles.successIconText}>✓</Text>
         </View>
         
-        {amount && parseFloat(amount as string) > 100 ? 'תודה רבה על תרומתך הנדיבה!' : 'תודה רבה!'}
+        <Text style={styles.title}>
+          {amount && parseFloat(amount as string) > 100 ? 'תודה רבה על תרומתך הנדיבה!' : 'תודה רבה!'}
+        </Text>
         <Text style={styles.subtitle}>התשלום בוצע בהצלחה</Text>
         
         <View style={styles.summaryBox}>

@@ -147,7 +147,7 @@ export const TaktzivitAPI = {
       if (result.success) {
         
         switch (paymentDataToPAy.paymentMethod) {
-          case 'credit-tap':
+          case 'credit_card':
             if (result.shvaCode && result.shvaCode.startsWith('000')) {
               console.log('התשלום אושר!');
               console.log('קוד אישור:', result.shvaCode);
@@ -156,7 +156,8 @@ export const TaktzivitAPI = {
                 success: true, 
                 transactionId: result.transactionId || ('TRX' + Date.now()), 
                 status: 'completed',
-                shvaCode: result.shvaCode
+                shvaCode: result.shvaCode,
+                idDoc: result.idDoc
               };
             } else {
               console.log('התשלום נדחה:', result.shvaCode);

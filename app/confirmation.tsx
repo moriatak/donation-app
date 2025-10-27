@@ -131,7 +131,7 @@ export default function ConfirmationScreen() {
               thumbColor={agreedToTerms ? config.colors.primary : '#f4f3f4'}
             />
             <Text style={styles.termsText}>
-              אני מאשר/ת את <Text style={[styles.termsBold, { color: config.colors.primary }]}>תנאי התרומה</Text>
+              אני מאשר/ת את <Text style={[styles.termsBold, { color: config.colors.primary }]}>פרטי התרומה</Text>
             </Text>
           </View>
         </View>

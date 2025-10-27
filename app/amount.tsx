@@ -214,7 +214,8 @@ const [showMonthPicker, setShowMonthPicker] = useState(false);
             !finalAmount && styles.disabled
           ]}
           onPress={() => router.push({
-            pathname: '/phone-verification', 
+            pathname: '/details', // כרגע אליהו ביקש שיהיה בלי זיהוי עם הזנה מלאה
+            // pathname: '/phone-verification', 
             params: { 
                 ...params, 
                 amount: finalAmount?.toString(),

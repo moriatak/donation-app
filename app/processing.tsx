@@ -61,7 +61,8 @@ export default function ProcessingScreen() {
           pathname: '/success',
           params: {
             ...params,
-            transactionId: paymentResponse.transactionId
+            transactionId: paymentResponse.transactionId,
+            idDoc: paymentResponse.idDoc
           }
         });
       }

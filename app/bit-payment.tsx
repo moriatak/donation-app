@@ -29,33 +29,30 @@ export default function BitPaymentScreen() {
     if (!polling || !docToken) return;
   
     const intervalId = setInterval(() => {
-      checkPaymentStatus(); // 👈 העבר את הקריאה החוצה מה-setState
+      checkPaymentStatus();
       
-      setPollingCount(prev => {
-        const newCount = prev + 1;
-        
-        // Timeout אחרי 10 דקות (200 בדיקות x 3 שניות)
-        if (newCount >= 200) {
-          setPolling(false);
-          clearInterval(intervalId);
-          if (!hasNavigatedRef.current) {
-            hasNavigatedRef.current = true;
-            router.replace({
-              pathname: '/error',
-              params: {
-                ...params,
-                errorMessage: 'זמן ההמתנה לתשלום הסתיים. אנא נסה שוב.',
-              },
-            });
-          }
-        }
-  
-        return newCount;
-      });
+      setPollingCount(prev => prev + 1);
     }, 3000);
   
     return () => clearInterval(intervalId);
   }, [polling, docToken]);
+  
+  // 👇 useEffect נפרד שעוקב אחרי pollingCount
+  useEffect(() => {
+    // Timeout אחרי 10 דקות (200 בדיקות x 3 שניות)
+    if (pollingCount >= 200 && !hasNavigatedRef.current) {
+      hasNavigatedRef.current = true;
+      setPolling(false);
+      
+      router.replace({
+        pathname: '/error',
+        params: {
+          ...params,
+          errorMessage: 'זמן ההמתנה לתשלום הסתיים. אנא נסה שוב.',
+        },
+      });
+    }
+  }, [pollingCount]);
 
 
   const processPayment = async () => {
@@ -172,6 +169,7 @@ export default function BitPaymentScreen() {
         <WebView
           source={{ uri: paymentUrl }}
           style={styles.webview}
+          userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
           // בלחיצה על איקס בתוך החלק של ביט, יחזיר אחורה לבחירת אמצעי תשלום
           onNavigationStateChange={(navState) => {
             // עדכן את ההיסטוריה
@@ -209,6 +207,15 @@ export default function BitPaymentScreen() {
           domStorageEnabled={true}
           sharedCookiesEnabled={true}
           thirdPartyCookiesEnabled={true}
+          // 👇 הוסף את זה כדי לחסום פתיחת אפליקציות חיצוניות
+          onShouldStartLoadWithRequest={(request) => {
+          // אפשר רק URL-ים שמתחילים ב-http/https
+           if (request.url.startsWith('http://') || request.url.startsWith('https://')) {
+                return true;
+            }
+            // חסום כל deep link (bit://, intent://, וכו')
+            return false;
+          }}
           onError={(syntheticEvent) => {
             const { nativeEvent } = syntheticEvent;
             console.log('WebView error:', nativeEvent);

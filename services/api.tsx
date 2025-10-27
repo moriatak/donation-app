@@ -1,6 +1,9 @@
 import { MOCK_QR_CONFIG } from '../config/mockConfig';
 const config = MOCK_QR_CONFIG;
 
+const API_KEY = "a12y45bC4@1&&lo9OpC";
+const DONATION_API_ENDPOINT = "https://tak.co.il/donation_app/index.php";
+
 export interface IntentResponse {
   success: boolean;
   intentId: string;
@@ -186,21 +189,75 @@ export const TaktzivitAPI = {
     return { success: true };
   }
 };
+
+// ✅ עדכון DonorAPI להתחבר לשרת האמיתי
 export const DonorAPI = {
-  checkDonorExists: async (phone: string): Promise<{ exists: boolean }> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    // סימולציה: אם הטלפון מסתיים ב-3 או 0, התורם קיים
-    const lastDigit = phone.slice(-1);
-    return { exists: lastDigit === '3' || lastDigit === '0' };
+  // שליחת קוד אימות
+  sendVerificationCode: async (phone: string): Promise<{ 
+    success: boolean; 
+    sessionId?: string;
+    message?: string;
+  }> => {
+    try {
+      const parameters = new FormData();
+      parameters.append('user_and_phone', 'true');
+      parameters.append('apiKey', API_KEY);
+      parameters.append('phone', phone);
+      parameters.append('companyId', config.settings.companyId);
+
+      // הדפסת הבקשה ללוג לפני שליחה
+      console.log('======== LOGIN REQUEST ========');
+      console.log('URL: ',DONATION_API_ENDPOINT);
+      console.log('METHOD: POST');
+      console.log('HEADERS: Content-Type: application/json');
+      console.log('BODY:', JSON.stringify(parameters, null, 2));
+      console.log('================================');
+
+      const response = await fetch(DONATION_API_ENDPOINT, {
+        method: 'POST',
+        body: parameters,
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        
+        // הדפסת התשובה שהתקבלה
+        console.log('======== LOGIN RESPONSE ========');
+        console.log(JSON.stringify(responseData, null, 2));
+        console.log('=================================');
+
+        if (responseData.success === true) {
+          return {
+            success: true,
+            sessionId: responseData.sessionId
+          };
+        } else {
+          return {
+            success: false,
+            message: responseData.message || 'פלאפון לא מזוהה במערכת'
+          };
+        }
+      } else {
+        return {
+          success: false,
+          message: 'אירעה שגיאה בתקשורת עם השרת'
+        };
+      }
+    } catch (error) {
+      console.log('Error sending verification code:', error);
+      return {
+        success: false,
+        message: 'אירעה שגיאה בזיהוי התורם או בשליחת הקוד'
+      };
+    }
   },
   
-  sendVerificationCode: async (phone: string): Promise<{ success: boolean; expiresIn: number }> => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log(`קוד אימות נשלח ל-${phone}: 123456`); // בפרודקשן זה יישלח ב-SMS
-    return { success: true, expiresIn: 300 }; // 5 דקות
-  },
-  
-  verifyCode: async (phone: string, code: string): Promise<{
+  // אימות קוד
+  verifyCode: async (
+    phone: string, 
+    code: string, 
+    sessionId: string
+  ): Promise<{
     success: boolean;
     donorData?: {
       firstName: string;
@@ -209,23 +266,69 @@ export const DonorAPI = {
       idNumber: string;
       email: string;
     };
+    message?: string;
   }> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // סימולציה: קוד נכון הוא תמיד "123456"
-    if (code === '123456') {
-      return {
-        success: true,
-        donorData: {
-          firstName: 'אילון',
-          lastName: 'זילבר',
-          phone: phone,
-          idNumber: '',
-          email: 'ayalon@example.com'
+    try {
+      const parameters = new FormData();
+      parameters.append('verify_code', code);
+      parameters.append('apiKey', API_KEY);
+      parameters.append('phone', phone);
+      parameters.append('sessionId', sessionId);
+      parameters.append('companyId', config.settings.companyId);
+
+        // הדפסת הבקשה ללוג לפני שליחה
+        console.log('======== LOGIN REQUEST ========');
+        console.log('URL: ',DONATION_API_ENDPOINT);
+        console.log('METHOD: POST');
+        console.log('HEADERS: Content-Type: application/json');
+        console.log('BODY:', JSON.stringify(parameters, null, 2));
+        console.log('================================');
+
+      const response = await fetch(DONATION_API_ENDPOINT, {
+        method: 'POST',
+        body: parameters,
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+
+         // הדפסת התשובה שהתקבלה
+         console.log('======== LOGIN RESPONSE ========');
+         console.log(JSON.stringify(responseData, null, 2));
+         console.log('=================================');
+        
+        if (responseData.success === true) {
+          // השרת מחזיר את פרטי המשתמש מטבלת appc_contact
+          const userData = responseData.message;
+          
+          return {
+            success: true,
+            donorData: {
+              firstName: userData.FirstName || '',
+              lastName: userData.LastName || '',
+              phone: userData.Phone || phone,
+              idNumber: userData.IdNumber || '',
+              email: userData.Email || ''
+            }
+          };
+        } else {
+          return {
+            success: false,
+            message: responseData.message || 'קוד אינו תקין'
+          };
         }
+      } else {
+        return {
+          success: false,
+          message: 'אירעה שגיאה בתקשורת עם השרת'
+        };
+      }
+    } catch (error) {
+      console.log('Error verifying code:', error);
+      return {
+        success: false,
+        message: 'אירעה שגיאה באימות הקוד'
       };
     }
-    
-    return { success: false };
   }
 };

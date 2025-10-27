@@ -23,24 +23,27 @@ export default function PhoneVerificationScreen() {
     
     setLoading(true);
     try {
-      const { exists } = await DonorAPI.checkDonorExists(phone);
-      
-      if (exists) {
-        // תורם קיים - שלח קוד אימות
-        await DonorAPI.sendVerificationCode(phone);
+      const result = await DonorAPI.sendVerificationCode(phone);
+
+      if (result.success && result.sessionId) {
+        // תורם קיים וקוד נשלח בהצלחה - מעבר למסך אימות
         router.push({
           pathname: '/code-verification',
-          params: { ...params, phone }
+          params: { 
+            ...params, 
+            phone,
+            sessionId: result.sessionId 
+          }
         });
       } else {
-        // תורם חדש - מעבר להזנה ידנית
+        // תורם חדש - מעבר להזנה ידנית והצגת מודל נעים
         router.push({
           pathname: '/details',
-          params: { ...params, phone, isNewDonor: 'true' }
+          params: { ...params, phone, isNewDonor: 'true', showNewDonorModal: 'true' }
         });
       }
     } catch (error) {
-      Alert.alert('שגיאה', 'אירעה שגיאה בבדיקת המספר');
+      Alert.alert('שגיאה', 'אירעה שגיאה בבדיקת המספר או בשליחת הקוד');
     } finally {
       setLoading(false);
     }

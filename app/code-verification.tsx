@@ -10,6 +10,8 @@ export default function CodeVerificationScreen() {
   const config = MOCK_QR_CONFIG;
   
   const phone = params.phone as string;
+  const sessionId = params.sessionId as string;
+  
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [attempts, setAttempts] = useState(0);
   const [countdown, setCountdown] = useState(60);
@@ -59,7 +61,7 @@ export default function CodeVerificationScreen() {
   const verifyCode = async (codeString: string) => {
     setLoading(true);
     try {
-      const result = await DonorAPI.verifyCode(phone, codeString);
+      const result = await DonorAPI.verifyCode(phone, codeString, sessionId);
       if (result.success && result.donorData) {
         // קוד נכון - מעבר למסך פרטים עם הנתונים
         router.replace({
@@ -97,7 +99,7 @@ export default function CodeVerificationScreen() {
             ]
           );
         } else {
-          Alert.alert('קוד שגוי', `נותרו ${3 - newAttempts} ניסיונות`);
+          Alert.alert('קוד שגוי', result.message || `נותרו ${3 - newAttempts} ניסיונות`);
         }
       }
     } catch (error) {
@@ -111,8 +113,16 @@ export default function CodeVerificationScreen() {
     setCanResend(false);
     setCountdown(60);
     try {
-      await DonorAPI.sendVerificationCode(phone);
-      Alert.alert('קוד נשלח', 'קוד אימות חדש נשלח למספר הטלפון');
+      const result = await DonorAPI.sendVerificationCode(phone);
+      
+      if (result.success && result.sessionId) {
+        // עדכון sessionId החדש
+        // @ts-ignore
+        params.sessionId = result.sessionId;
+        Alert.alert('קוד נשלח', 'קוד אימות חדש נשלח למספר הטלפון');
+      } else {
+        Alert.alert('שגיאה', result.message || 'אירעה שגיאה בשליחת הקוד');
+      }
     } catch (error) {
       Alert.alert('שגיאה', 'אירעה שגיאה בשליחת הקוד');
     }
@@ -192,10 +202,6 @@ export default function CodeVerificationScreen() {
             להזנה ידנית
           </Text>
         </TouchableOpacity>
-        
-        <Text style={styles.hint}>
-          💡 בסימולציה: הקוד הנכון הוא 123456
-        </Text>
       </View>
     </View>
   );
@@ -273,11 +279,5 @@ const styles = StyleSheet.create({
   manualText: {
     fontSize: 16,
     textDecorationLine: 'underline',
-  },
-  hint: {
-    fontSize: 14,
-    color: '#9ca3af',
-    textAlign: 'center',
-    fontStyle: 'italic',
   },
 });

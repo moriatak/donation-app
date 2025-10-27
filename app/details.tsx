@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MOCK_QR_CONFIG } from '../config/mockConfig';
 import { Validators } from '../services/validators';
 
@@ -39,6 +39,7 @@ export default function DetailsScreen() {
     dedication: ''
   });
   const [errors, setErrors] = useState<Errors>({});
+  const [showNewDonorModal, setShowNewDonorModal] = useState(params.showNewDonorModal ? true : false);
   
   const handleSubmit = () => {
     const newErrors: Errors = {
@@ -66,6 +67,10 @@ export default function DetailsScreen() {
         }
       });
     }
+  };
+
+  const handleNewDonorContinue = () => {
+    setShowNewDonorModal(false);
   };
 
   return (
@@ -217,6 +222,38 @@ export default function DetailsScreen() {
           <Text style={styles.continueText}>המשך</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Custom Modal for New Donor */}
+      <Modal
+        visible={showNewDonorModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowNewDonorModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: 'white' }]}>
+            <View style={styles.modalIconContainer}>
+              <Text style={styles.modalIcon}>🔍</Text>
+            </View>
+            
+            <Text style={[styles.modalTitle, { color: config.colors.primary }]}>
+              לא זיהינו אותך במערכת
+            </Text>
+
+            <Text style={styles.modalMessage}>
+              נראה שזו הפעם הראשונה שלך איתנו{'\n'}
+              נצטרך כמה פרטים כדי להמשיך
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: config.colors.primary }]}
+              onPress={handleNewDonorContinue}
+            >
+              <Text style={styles.modalButtonText}>למלא פרטים</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -319,4 +356,60 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   continueText: { color: 'white', fontSize: 22, fontWeight: 'bold' },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalIconContainer: {
+    marginBottom: 20,
+  },
+  modalIcon: {
+    fontSize: 64,
+  },
+  modalTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 17,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 28,
+  },
+  modalButton: {
+    width: '100%',
+    padding: 18,
+    borderRadius: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 19,
+    fontWeight: 'bold',
+  },
 });

@@ -1,3 +1,4 @@
+import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
 import { TaktzivitAPI } from '@/services/api';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -139,110 +140,114 @@ export default function BitPaymentScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={config.colors.primary} />
-          <Text style={[styles.loadingText, { color: config.colors.primary }]}>
-            מכין תשלום בביט...
-          </Text>
+      <AuthGuard>
+        <View style={[styles.container, { backgroundColor: config.colors.background }]}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={config.colors.primary} />
+            <Text style={[styles.loadingText, { color: config.colors.primary }]}>
+              מכין תשלום בביט...
+            </Text>
+          </View>
         </View>
-      </View>
+      </AuthGuard>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
-          <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: config.colors.primary }]}>תשלום בביט</Text>
-        <View style={{ width: 80 }} />
-      </View>
-
-      <View style={[styles.amountBox, { backgroundColor: config.colors.primary }]}>
-        <Text style={styles.amountLabel}>סכום לתשלום</Text>
-        <Text style={styles.amount}>₪{params.amount}</Text>
-      </View>
-
-      {paymentUrl ? (
-        <WebView
-          source={{ uri: paymentUrl }}
-          style={styles.webview}
-          userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-          // בלחיצה על איקס בתוך החלק של ביט, יחזיר אחורה לבחירת אמצעי תשלום
-          onNavigationStateChange={(navState) => {
-            // עדכן את ההיסטוריה
-            setNavigationHistory(prev => [...prev, navState.url]);
-            // בדוק אם המשתמש ביטל
-            if (navState.canGoBack === false && navigationHistory.length > 1) {
-              // המשתמש חזר לדף הראשון - סימן לביטול
-              if (!hasNavigatedRef.current) {
-                hasNavigatedRef.current = true;
-                setPolling(false);
-                router.back();
-              }
-            }
-            // בדוק URL ספציפיים של ביטול
-            if (navState.url.includes('cancel') || 
-                navState.url.includes('abort') ||
-                navState.url === 'about:blank') {
-              if (!hasNavigatedRef.current) {
-                hasNavigatedRef.current = true;
-                setPolling(false);
-                router.back();
-              }
-            }
-          }}
-          startInLoadingState={true}
-          renderLoading={() => (
-            <View style={styles.webviewLoading}>
-              <ActivityIndicator size="large" color={config.colors.primary} />
-              <Text style={[styles.loadingText, { color: config.colors.primary }]}>
-                טוען עמוד תשלום...
-              </Text>
-            </View>
-          )}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          sharedCookiesEnabled={true}
-          thirdPartyCookiesEnabled={true}
-          // 👇 הוסף את זה כדי לחסום פתיחת אפליקציות חיצוניות
-          onShouldStartLoadWithRequest={(request) => {
-          // אפשר רק URL-ים שמתחילים ב-http/https
-           if (request.url.startsWith('http://') || request.url.startsWith('https://')) {
-                return true;
-            }
-            // חסום כל deep link (bit://, intent://, וכו')
-            return false;
-          }}
-          onError={(syntheticEvent) => {
-            const { nativeEvent } = syntheticEvent;
-            console.log('WebView error:', nativeEvent);
-            router.replace({
-              pathname: '/error',
-              params: {
-                ...params,
-                errorMessage: 'שגיאה בטעינת עמוד התשלום',
-              },
-            });
-          }}
-        />
-      ) : (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>לא התקבל קישור תשלום</Text>
-          <TouchableOpacity
-            style={[styles.retryButton, { backgroundColor: config.colors.primary }]}
-            onPress={() => {
-              setLoading(true);
-              processPayment();
-            }}
-          >
-            <Text style={styles.retryButtonText}>נסה שוב</Text>
+    <AuthGuard>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
+            <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
           </TouchableOpacity>
+          <Text style={[styles.title, { color: config.colors.primary }]}>תשלום בביט</Text>
+          <View style={{ width: 80 }} />
         </View>
-      )}
-    </View>
+
+        <View style={[styles.amountBox, { backgroundColor: config.colors.primary }]}>
+          <Text style={styles.amountLabel}>סכום לתשלום</Text>
+          <Text style={styles.amount}>₪{params.amount}</Text>
+        </View>
+
+        {paymentUrl ? (
+          <WebView
+            source={{ uri: paymentUrl }}
+            style={styles.webview}
+            userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            // בלחיצה על איקס בתוך החלק של ביט, יחזיר אחורה לבחירת אמצעי תשלום
+            onNavigationStateChange={(navState) => {
+              // עדכן את ההיסטוריה
+              setNavigationHistory(prev => [...prev, navState.url]);
+              // בדוק אם המשתמש ביטל
+              if (navState.canGoBack === false && navigationHistory.length > 1) {
+                // המשתמש חזר לדף הראשון - סימן לביטול
+                if (!hasNavigatedRef.current) {
+                  hasNavigatedRef.current = true;
+                  setPolling(false);
+                  router.back();
+                }
+              }
+              // בדוק URL ספציפיים של ביטול
+              if (navState.url.includes('cancel') || 
+                  navState.url.includes('abort') ||
+                  navState.url === 'about:blank') {
+                if (!hasNavigatedRef.current) {
+                  hasNavigatedRef.current = true;
+                  setPolling(false);
+                  router.back();
+                }
+              }
+            }}
+            startInLoadingState={true}
+            renderLoading={() => (
+              <View style={styles.webviewLoading}>
+                <ActivityIndicator size="large" color={config.colors.primary} />
+                <Text style={[styles.loadingText, { color: config.colors.primary }]}>
+                  טוען עמוד תשלום...
+                </Text>
+              </View>
+            )}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            sharedCookiesEnabled={true}
+            thirdPartyCookiesEnabled={true}
+            // 👇 הוסף את זה כדי לחסום פתיחת אפליקציות חיצוניות
+            onShouldStartLoadWithRequest={(request) => {
+            // אפשר רק URL-ים שמתחילים ב-http/https
+            if (request.url.startsWith('http://') || request.url.startsWith('https://')) {
+                  return true;
+              }
+              // חסום כל deep link (bit://, intent://, וכו')
+              return false;
+            }}
+            onError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.log('WebView error:', nativeEvent);
+              router.replace({
+                pathname: '/error',
+                params: {
+                  ...params,
+                  errorMessage: 'שגיאה בטעינת עמוד התשלום',
+                },
+              });
+            }}
+          />
+        ) : (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>לא התקבל קישור תשלום</Text>
+            <TouchableOpacity
+              style={[styles.retryButton, { backgroundColor: config.colors.primary }]}
+              onPress={() => {
+                setLoading(true);
+                processPayment();
+              }}
+            >
+              <Text style={styles.retryButtonText}>נסה שוב</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </AuthGuard>
   );
 }
 

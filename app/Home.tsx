@@ -1,3 +1,4 @@
+import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -14,57 +15,59 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={config.colors.background} />
-      
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handlePhoneIconPress}>
-          {/* <Text style={styles.headerIcon}>📱</Text> */}
-          <Text style={styles.headerIcon}>⚙️</Text>
-        </TouchableOpacity>
-        <HebrewDate config={config} />
-      </View>
-      
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.logoSection}>
-          {config.synagogue.logo_url && !logoError ? (
-            <Image
-              source={{ 
-                uri: config.synagogue.logo_url,
-                headers: {
-                  'Accept': '*/*',
-                  'User-Agent': 'Mozilla/5.0'
-                }
-              }}
-              style={styles.logo}
-              resizeMode="contain"
-              onError={(e) => {
-                console.log('שגיאה בלוגו:', e.nativeEvent.error);
-                setLogoError(true);
-              }}
-              onLoad={() => console.log('לוגו נטען')}
-            />
-          ) : (
-            <View style={styles.logoFallback}>
-              <Text style={styles.logoFallbackText}>🕍</Text>
-            </View>
-          )}
-          <Text style={[styles.synagogueName, { color: config.colors.primary }]}>
-            {config.synagogue.name}
-          </Text>
+    <AuthGuard>
+      <View style={[styles.container, { backgroundColor: config.colors.background }]}>
+        <StatusBar barStyle="dark-content" backgroundColor={config.colors.background} />
+        
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handlePhoneIconPress}>
+            {/* <Text style={styles.headerIcon}>📱</Text> */}
+            <Text style={styles.headerIcon}>⚙️</Text>
+          </TouchableOpacity>
+          <HebrewDate config={config} />
         </View>
         
-        <TouchableOpacity
-          style={[styles.donationButton, { backgroundColor: config.colors.primary }]}
-          onPress={() => router.push('/target-selection')}
-          // onPress={() => router.push('/payment-method')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.donationButtonText}>תרומה חדשה</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.logoSection}>
+            {config.synagogue.logo_url && !logoError ? (
+              <Image
+                source={{ 
+                  uri: config.synagogue.logo_url,
+                  headers: {
+                    'Accept': '*/*',
+                    'User-Agent': 'Mozilla/5.0'
+                  }
+                }}
+                style={styles.logo}
+                resizeMode="contain"
+                onError={(e) => {
+                  console.log('שגיאה בלוגו:', e.nativeEvent.error);
+                  setLogoError(true);
+                }}
+                onLoad={() => console.log('לוגו נטען')}
+              />
+            ) : (
+              <View style={styles.logoFallback}>
+                <Text style={styles.logoFallbackText}>🕍</Text>
+              </View>
+            )}
+            <Text style={[styles.synagogueName, { color: config.colors.primary }]}>
+              {config.synagogue.name}
+            </Text>
+          </View>
+          
+          <TouchableOpacity
+            style={[styles.donationButton, { backgroundColor: config.colors.primary }]}
+            onPress={() => router.push('/target-selection')}
+            // onPress={() => router.push('/payment-method')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.donationButtonText}>תרומה חדשה</Text>
+          </TouchableOpacity>
+        </ScrollView>
 
-    </View>
+      </View>
+    </AuthGuard>
   );
 }
 

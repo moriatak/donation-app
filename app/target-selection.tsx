@@ -1,3 +1,4 @@
+import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -24,50 +25,52 @@ export default function TargetSelectionScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          style={styles.backButton}
-        >
-          <Text style={[styles.backButtonText, { color: config.colors.primary }]}>
-            ← חזור
+    <AuthGuard>
+      <View style={[styles.container, { backgroundColor: config.colors.background }]}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={styles.backButton}
+          >
+            <Text style={[styles.backButtonText, { color: config.colors.primary }]}>
+              ← חזור
+            </Text>
+          </TouchableOpacity>
+          <Text style={[styles.title, { color: config.colors.primary }]}>
+            בחר יעד לתרומה
           </Text>
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: config.colors.primary }]}>
-          בחר יעד לתרומה
-        </Text>
-        <View style={{ width: 80 }} />
-      </View>
-      
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.grid}>
-          {config.donation_targets.map(target => (
-            <TouchableOpacity
-              key={target.id}
-              style={[
-                styles.targetButton,
-                { borderColor: config.colors.secondary },
-                selectedTarget === target.id && {
-                  backgroundColor: config.colors.primary,
-                  borderColor: config.colors.primary,
-                }
-              ]}
-              onPress={() => handleTargetPress(target)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.targetIcon}>{target.icon}</Text>
-              <Text style={[
-                styles.targetName,
-                { color: selectedTarget === target.id ? 'white' : config.colors.primary }
-              ]}>
-                {target.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          <View style={{ width: 80 }} />
         </View>
-      </ScrollView>
-    </View>
+        
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.grid}>
+            {config.donation_targets.map(target => (
+              <TouchableOpacity
+                key={target.id}
+                style={[
+                  styles.targetButton,
+                  { borderColor: config.colors.secondary },
+                  selectedTarget === target.id && {
+                    backgroundColor: config.colors.primary,
+                    borderColor: config.colors.primary,
+                  }
+                ]}
+                onPress={() => handleTargetPress(target)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.targetIcon}>{target.icon}</Text>
+                <Text style={[
+                  styles.targetName,
+                  { color: selectedTarget === target.id ? 'white' : config.colors.primary }
+                ]}>
+                  {target.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+    </AuthGuard>
   );
 }
 

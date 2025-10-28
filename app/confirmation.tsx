@@ -1,3 +1,4 @@
+import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -36,134 +37,136 @@ export default function ConfirmationScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/Home')} style={styles.cancelButton}>
-          <Text style={styles.cancelButtonText}>✕ ביטול</Text>
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: config.colors.primary }]}>אישור תשלום</Text>
-        <View style={{ width: 80 }} />
-      </View>
-      
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.summaryBox}>
-        <View style={styles.summaryHeader}>
-        <Text style={[styles.targetLabel, { color: '#6b7280' }]}>עבור:</Text>
-        <Text style={styles.summaryIcon}>{target.icon}</Text>
-        <Text style={[styles.summaryTarget, { color: config.colors.primary }]}>
-            {target.name}
-        </Text>
-        <Text style={[styles.summaryAmount, { color: config.colors.secondary }]}>
-            ₪{amount}
-        </Text>
-        
+    <AuthGuard>
+      <View style={[styles.container, { backgroundColor: config.colors.background }]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.push('/Home')} style={styles.cancelButton}>
+            <Text style={styles.cancelButtonText}>✕ ביטול</Text>
+          </TouchableOpacity>
+          <Text style={[styles.title, { color: config.colors.primary }]}>אישור תשלום</Text>
+          <View style={{ width: 80 }} />
         </View>
-        {params.isMonthly === 'true' && (
-  <>
-    <View style={styles.detailRow}>
-      <Text style={[styles.detailLabel, { color: config.colors.primary }]}>סוג תרומה:</Text>
-      <Text style={[styles.detailValue, { color: '#16a34a', fontWeight: 'bold' }]}>
-        תרומה חודשית
-      </Text>
-    </View>
-    <View style={styles.detailRow}>
-      <Text style={[styles.detailLabel, { color: config.colors.primary }]}>משך:</Text>
-      <Text style={styles.detailValue}>
-        {params.monthsCount === 'unlimited' 
-          ? 'ללא הגבלה' 
-          : `${params.monthsCount} חודשים`}
-      </Text>
-    </View>
-    {params.monthsCount !== 'unlimited' && (
+        
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.summaryBox}>
+          <View style={styles.summaryHeader}>
+          <Text style={[styles.targetLabel, { color: '#6b7280' }]}>עבור:</Text>
+          <Text style={styles.summaryIcon}>{target.icon}</Text>
+          <Text style={[styles.summaryTarget, { color: config.colors.primary }]}>
+              {target.name}
+          </Text>
+          <Text style={[styles.summaryAmount, { color: config.colors.secondary }]}>
+              ₪{amount}
+          </Text>
+          
+          </View>
+          {params.isMonthly === 'true' && (
+    <>
       <View style={styles.detailRow}>
-        <Text style={[styles.detailLabel, { color: config.colors.primary }]}>סה״כ:</Text>
-        <Text style={[styles.detailValue, { fontWeight: 'bold', fontSize: 20 }]}>
-          ₪{params.totalAmount}
+        <Text style={[styles.detailLabel, { color: config.colors.primary }]}>סוג תרומה:</Text>
+        <Text style={[styles.detailValue, { color: '#16a34a', fontWeight: 'bold' }]}>
+          תרומה חודשית
         </Text>
       </View>
-    )}
-  </>
-)}
-          <View style={styles.divider} />
-          
-          <View style={styles.detailsSection}>
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: config.colors.primary }]}>שם:</Text>
-              <Text style={styles.detailValue}>{donorDetails.firstName} {donorDetails.lastName}</Text>
-            </View>
+      <View style={styles.detailRow}>
+        <Text style={[styles.detailLabel, { color: config.colors.primary }]}>משך:</Text>
+        <Text style={styles.detailValue}>
+          {params.monthsCount === 'unlimited' 
+            ? 'ללא הגבלה' 
+            : `${params.monthsCount} חודשים`}
+        </Text>
+      </View>
+      {params.monthsCount !== 'unlimited' && (
+        <View style={styles.detailRow}>
+          <Text style={[styles.detailLabel, { color: config.colors.primary }]}>סה״כ:</Text>
+          <Text style={[styles.detailValue, { fontWeight: 'bold', fontSize: 20 }]}>
+            ₪{params.totalAmount}
+          </Text>
+        </View>
+      )}
+    </>
+  )}
+            <View style={styles.divider} />
             
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: config.colors.primary }]}>טלפון:</Text>
-              <Text style={styles.detailValue}>{donorDetails.phone}</Text>
-            </View>
-            
-            {donorDetails.idNumber && (
+            <View style={styles.detailsSection}>
               <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: config.colors.primary }]}>ת״ז:</Text>
-                <Text style={styles.detailValue}>******{donorDetails.idNumber.slice(-3)}</Text>
+                <Text style={[styles.detailLabel, { color: config.colors.primary }]}>שם:</Text>
+                <Text style={styles.detailValue}>{donorDetails.firstName} {donorDetails.lastName}</Text>
               </View>
-            )}
-            
-            {donorDetails.email && (
+              
               <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: config.colors.primary }]}>אימייל:</Text>
-                <Text style={styles.detailValue}>{donorDetails.email}</Text>
+                <Text style={[styles.detailLabel, { color: config.colors.primary }]}>טלפון:</Text>
+                <Text style={styles.detailValue}>{donorDetails.phone}</Text>
               </View>
-            )}
-            
-            {donorDetails.dedication && (
-              <View style={styles.dedicationSection}>
-                <Text style={[styles.detailLabel, { color: config.colors.primary }]}>הקדשה:</Text>
-                <View style={styles.dedicationBox}>
-                  <Text style={styles.dedicationText}>{donorDetails.dedication}</Text>
+              
+              {donorDetails.idNumber && (
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: config.colors.primary }]}>ת״ז:</Text>
+                  <Text style={styles.detailValue}>******{donorDetails.idNumber.slice(-3)}</Text>
                 </View>
-              </View>
-            )}
+              )}
+              
+              {donorDetails.email && (
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: config.colors.primary }]}>אימייל:</Text>
+                  <Text style={styles.detailValue}>{donorDetails.email}</Text>
+                </View>
+              )}
+              
+              {donorDetails.dedication && (
+                <View style={styles.dedicationSection}>
+                  <Text style={[styles.detailLabel, { color: config.colors.primary }]}>הקדשה:</Text>
+                  <View style={styles.dedicationBox}>
+                    <Text style={styles.dedicationText}>{donorDetails.dedication}</Text>
+                  </View>
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-        
-        <View style={styles.termsBox}>
-          <View style={styles.termsRow}>
-            <Switch
-              value={agreedToTerms}
-              onValueChange={setAgreedToTerms}
-              trackColor={{ false: '#d1d5db', true: config.colors.secondary }}
-              thumbColor={agreedToTerms ? config.colors.primary : '#f4f3f4'}
-            />
-            <Text style={styles.termsText}>
-              אני מאשר/ת את <Text style={[styles.termsBold, { color: config.colors.primary }]}>פרטי התרומה</Text>
-            </Text>
-          </View>
-        </View>
-        
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.editButtonText}>✎ עריכה</Text>
-          </TouchableOpacity>
           
-          <TouchableOpacity
-            style={[
-              styles.payButton,
-              (!agreedToTerms || loading) && styles.payButtonDisabled
-            ]}
-            onPress={handlePayment}
-            disabled={!agreedToTerms || loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <Text style={styles.payButtonIcon}>✓</Text>
-                <Text style={styles.payButtonText}>תרום עכשיו</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
+          <View style={styles.termsBox}>
+            <View style={styles.termsRow}>
+              <Switch
+                value={agreedToTerms}
+                onValueChange={setAgreedToTerms}
+                trackColor={{ false: '#d1d5db', true: config.colors.secondary }}
+                thumbColor={agreedToTerms ? config.colors.primary : '#f4f3f4'}
+              />
+              <Text style={styles.termsText}>
+                אני מאשר/ת את <Text style={[styles.termsBold, { color: config.colors.primary }]}>פרטי התרומה</Text>
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.editButtonText}>✎ עריכה</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.payButton,
+                (!agreedToTerms || loading) && styles.payButtonDisabled
+              ]}
+              onPress={handlePayment}
+              disabled={!agreedToTerms || loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Text style={styles.payButtonIcon}>✓</Text>
+                  <Text style={styles.payButtonText}>תרום עכשיו</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+    </AuthGuard>
   );
 }
 

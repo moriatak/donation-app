@@ -1,6 +1,7 @@
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import InfoAlertModal from '@/components/InfoAlertModal';
 import SuccessModal from '@/components/SuccessModal';
+import { AuthGuard } from '@/context/AuthGuard';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -113,277 +114,279 @@ const handleSuccessModalClose = () => {
 };
 
   return (
-    <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-      <StatusBar barStyle="light-content" backgroundColor={config.colors.primary} />
-      
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: config.colors.primary }]}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.push('/Home')}
-        >
-          <Text style={styles.backButtonText}>← חזור</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>הגדרות מערכת</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+    <AuthGuard>
+      <View style={[styles.container, { backgroundColor: config.colors.background }]}>
+        <StatusBar barStyle="light-content" backgroundColor={config.colors.primary} />
         
-        {/* פרטי בית כנסת */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardIcon}>🕍</Text>
-            <Text style={[styles.cardTitle, { color: config.colors.primary }]}>
-              פרטי בית הכנסת
-            </Text>
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>שם בית הכנסת</Text>
-            <TextInput
-              style={styles.textInput}
-              value={editConfig.synagogue.name}
-              onChangeText={(text) => setEditConfig({
-                ...editConfig,
-                synagogue: { ...editConfig.synagogue, name: text }
-              })}
-              placeholder="הזן שם בית כנסת"
-              placeholderTextColor="#999"
-              textAlign="right"
-            />
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>כתובת לוגו (URL)</Text>
-            <TextInput
-              style={styles.textInput}
-              value={editConfig.synagogue.logo_url}
-              onChangeText={(text) => setEditConfig({
-                ...editConfig,
-                synagogue: { ...editConfig.synagogue, logo_url: text }
-              })}
-              placeholder="https://..."
-              placeholderTextColor="#999"
-              textAlign="right"
-            />
-          </View>
-        </View>
-
-        {/* יעדי תרומה */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardIcon}>🎯</Text>
-            <Text style={[styles.cardTitle, { color: config.colors.primary }]}>
-              יעדי תרומה
-            </Text>
-          </View>
-          
-          <Text style={styles.cardDescription}>
-            הגדר את היעדים השונים שהתורמים יוכלו לבחור
-          </Text>
-
-          {editConfig.donation_targets.map((target, index) => (
-            <View key={target.id} style={styles.targetRow}>
-              <View style={styles.targetInputs}>
-                <TouchableOpacity
-                  style={styles.iconButton}
-                  onPress={() => handleIconPress(index)}
-                >
-                  <Text style={styles.iconText}>{target.icon}</Text>
-                </TouchableOpacity>
-                
-                <TextInput
-                  style={styles.targetNameInput}
-                  value={target.name}
-                  onChangeText={(text) => handleTargetChange(index, 'name', text)}
-                  placeholder="שם היעד"
-                  placeholderTextColor="#999"
-                  textAlign="right"
-                />
-              </View>
-
-              <TouchableOpacity
-                style={styles.removeTargetButton}
-                onPress={() => handleRemoveTarget(index)}
-              >
-                <Text style={styles.removeTargetText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-          
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: config.colors.secondary }]}
-            onPress={handleAddTarget}
+        {/* Header */}
+        <View style={[styles.header, { backgroundColor: config.colors.primary }]}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.push('/Home')}
           >
-            <Text style={styles.addButtonText}>+ הוסף יעד חדש</Text>
+            <Text style={styles.backButtonText}>← חזור</Text>
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>הגדרות מערכת</Text>
+          <View style={styles.placeholder} />
         </View>
 
-        {/* סכומים מהירים */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardIcon}>💰</Text>
-            <Text style={[styles.cardTitle, { color: config.colors.primary }]}>
-              סכומים מהירים
-            </Text>
-          </View>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           
-          <Text style={styles.cardDescription}>
-            הגדר סכומים מומלצים (הפרד בפסיק)
-          </Text>
-
-          <View style={styles.inputGroup}>
-            <TextInput
-              style={styles.textInput}
-              value={quickAmountsText}
-              onChangeText={(text) => {
-                // עדכן את הטקסט מיד - זה מאפשר להקליד פסיקים
-                setQuickAmountsText(text);
-                
-                // נסה לפרסר ולעדכן את המערך
-                const numbers = text
-                  .split(',')
-                  .map(s => s.trim())
-                  .filter(s => s !== '')
-                  .map(s => parseInt(s))
-                  .filter(n => !isNaN(n));
-                
-                // תמיד עדכן את editConfig, גם אם המערך ריק
-                setEditConfig({
+          {/* פרטי בית כנסת */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardIcon}>🕍</Text>
+              <Text style={[styles.cardTitle, { color: config.colors.primary }]}>
+                פרטי בית הכנסת
+              </Text>
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>שם בית הכנסת</Text>
+              <TextInput
+                style={styles.textInput}
+                value={editConfig.synagogue.name}
+                onChangeText={(text) => setEditConfig({
                   ...editConfig,
-                  quick_amounts: numbers
-                });
-              }}
-              placeholder="18, 36, 54, 100, 180"
-              placeholderTextColor="#999"
-              keyboardType="numbers-and-punctuation"
-              textAlign="right"
-            />
-          </View>
-
-          {/* תצוגה מקדימה */}
-          <View style={styles.preview}>
-            <Text style={styles.previewLabel}>תצוגה מקדימה:</Text>
-            <View style={styles.previewAmounts}>
-              {editConfig.quick_amounts.map((amount, index) => (
-                <View key={index} style={[styles.previewChip, { backgroundColor: config.colors.secondary }]}>
-                  <Text style={styles.previewChipText}>₪{amount}</Text>
-                </View>
-              ))}
+                  synagogue: { ...editConfig.synagogue, name: text }
+                })}
+                placeholder="הזן שם בית כנסת"
+                placeholderTextColor="#999"
+                textAlign="right"
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>כתובת לוגו (URL)</Text>
+              <TextInput
+                style={styles.textInput}
+                value={editConfig.synagogue.logo_url}
+                onChangeText={(text) => setEditConfig({
+                  ...editConfig,
+                  synagogue: { ...editConfig.synagogue, logo_url: text }
+                })}
+                placeholder="https://..."
+                placeholderTextColor="#999"
+                textAlign="right"
+              />
             </View>
           </View>
-        </View>
 
-        {/* הגדרות זמנים */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardIcon}>⏱️</Text>
-            <Text style={[styles.cardTitle, { color: config.colors.primary }]}>
-              הגדרות זמנים
+          {/* יעדי תרומה */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardIcon}>🎯</Text>
+              <Text style={[styles.cardTitle, { color: config.colors.primary }]}>
+                יעדי תרומה
+              </Text>
+            </View>
+            
+            <Text style={styles.cardDescription}>
+              הגדר את היעדים השונים שהתורמים יוכלו לבחור
             </Text>
+
+            {editConfig.donation_targets.map((target, index) => (
+              <View key={target.id} style={styles.targetRow}>
+                <View style={styles.targetInputs}>
+                  <TouchableOpacity
+                    style={styles.iconButton}
+                    onPress={() => handleIconPress(index)}
+                  >
+                    <Text style={styles.iconText}>{target.icon}</Text>
+                  </TouchableOpacity>
+                  
+                  <TextInput
+                    style={styles.targetNameInput}
+                    value={target.name}
+                    onChangeText={(text) => handleTargetChange(index, 'name', text)}
+                    placeholder="שם היעד"
+                    placeholderTextColor="#999"
+                    textAlign="right"
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.removeTargetButton}
+                  onPress={() => handleRemoveTarget(index)}
+                >
+                  <Text style={styles.removeTargetText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: config.colors.secondary }]}
+              onPress={handleAddTarget}
+            >
+              <Text style={styles.addButtonText}>+ הוסף יעד חדש</Text>
+            </TouchableOpacity>
           </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-              זמן חזרה אוטומטי למסך הבית (שניות)
+
+          {/* סכומים מהירים */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardIcon}>💰</Text>
+              <Text style={[styles.cardTitle, { color: config.colors.primary }]}>
+                סכומים מהירים
+              </Text>
+            </View>
+            
+            <Text style={styles.cardDescription}>
+              הגדר סכומים מומלצים (הפרד בפסיק)
             </Text>
-            <TextInput
-              style={styles.textInput}
-              value={editConfig.settings.auto_return_seconds.toString()}
-              onChangeText={(text) => setEditConfig({
-                ...editConfig,
-                settings: { ...editConfig.settings, auto_return_seconds: parseInt(text) || 60 }
-              })}
-              placeholder="60"
-              placeholderTextColor="#999"
-              keyboardType="number-pad"
-              textAlign="right"
-            />
+
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.textInput}
+                value={quickAmountsText}
+                onChangeText={(text) => {
+                  // עדכן את הטקסט מיד - זה מאפשר להקליד פסיקים
+                  setQuickAmountsText(text);
+                  
+                  // נסה לפרסר ולעדכן את המערך
+                  const numbers = text
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(s => s !== '')
+                    .map(s => parseInt(s))
+                    .filter(n => !isNaN(n));
+                  
+                  // תמיד עדכן את editConfig, גם אם המערך ריק
+                  setEditConfig({
+                    ...editConfig,
+                    quick_amounts: numbers
+                  });
+                }}
+                placeholder="18, 36, 54, 100, 180"
+                placeholderTextColor="#999"
+                keyboardType="numbers-and-punctuation"
+                textAlign="right"
+              />
+            </View>
+
+            {/* תצוגה מקדימה */}
+            <View style={styles.preview}>
+              <Text style={styles.previewLabel}>תצוגה מקדימה:</Text>
+              <View style={styles.previewAmounts}>
+                {editConfig.quick_amounts.map((amount, index) => (
+                  <View key={index} style={[styles.previewChip, { backgroundColor: config.colors.secondary }]}>
+                    <Text style={styles.previewChipText}>₪{amount}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
           </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-              זמן המתנה מקסימלי ללא פעילות (שניות)
-            </Text>
-            <TextInput
-              style={styles.textInput}
-              value={editConfig.settings.idle_timeout_seconds.toString()}
-              onChangeText={(text) => setEditConfig({
-                ...editConfig,
-                settings: { ...editConfig.settings, idle_timeout_seconds: parseInt(text) || 120 }
-              })}
-              placeholder="120"
-              placeholderTextColor="#999"
-              keyboardType="number-pad"
-              textAlign="right"
-            />
+
+          {/* הגדרות זמנים */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardIcon}>⏱️</Text>
+              <Text style={[styles.cardTitle, { color: config.colors.primary }]}>
+                הגדרות זמנים
+              </Text>
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                זמן חזרה אוטומטי למסך הבית (שניות)
+              </Text>
+              <TextInput
+                style={styles.textInput}
+                value={editConfig.settings.auto_return_seconds.toString()}
+                onChangeText={(text) => setEditConfig({
+                  ...editConfig,
+                  settings: { ...editConfig.settings, auto_return_seconds: parseInt(text) || 60 }
+                })}
+                placeholder="60"
+                placeholderTextColor="#999"
+                keyboardType="number-pad"
+                textAlign="right"
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                זמן המתנה מקסימלי ללא פעילות (שניות)
+              </Text>
+              <TextInput
+                style={styles.textInput}
+                value={editConfig.settings.idle_timeout_seconds.toString()}
+                onChangeText={(text) => setEditConfig({
+                  ...editConfig,
+                  settings: { ...editConfig.settings, idle_timeout_seconds: parseInt(text) || 120 }
+                })}
+                placeholder="120"
+                placeholderTextColor="#999"
+                keyboardType="number-pad"
+                textAlign="right"
+              />
+            </View>
+
+            {/* <View style={styles.switchRow}>
+              <Switch
+                value={editConfig.settings.require_id}
+                onValueChange={(value) => setEditConfig({
+                  ...editConfig,
+                  settings: { ...editConfig.settings, require_id: value }
+                })}
+                trackColor={{ false: '#d1d5db', true: config.colors.secondary }}
+                thumbColor={editConfig.settings.require_id ? config.colors.primary : '#f3f4f6'}
+              />
+              <Text style={styles.switchLabel}>דרוש תעודת זהות לתרומה</Text>
+            </View> */}
           </View>
 
-          {/* <View style={styles.switchRow}>
-            <Switch
-              value={editConfig.settings.require_id}
-              onValueChange={(value) => setEditConfig({
-                ...editConfig,
-                settings: { ...editConfig.settings, require_id: value }
-              })}
-              trackColor={{ false: '#d1d5db', true: config.colors.secondary }}
-              thumbColor={editConfig.settings.require_id ? config.colors.primary : '#f3f4f6'}
-            />
-            <Text style={styles.switchLabel}>דרוש תעודת זהות לתרומה</Text>
-          </View> */}
-        </View>
+          {/* כפתור שמירה */}
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: config.colors.primary }]}
+            onPress={handleSaveConfig}
+          >
+            <Text style={styles.saveButtonText}>שמור את כל ההגדרות</Text>
+          </TouchableOpacity>
 
-        {/* כפתור שמירה */}
-        <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: config.colors.primary }]}
-          onPress={handleSaveConfig}
-        >
-          <Text style={styles.saveButtonText}>שמור את כל ההגדרות</Text>
-        </TouchableOpacity>
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+        
+        {/* מודאל בחירת אייקון ליעד תרומה */}
+        <IconSelector 
+          visible={iconSelectorVisible}
+          onSelect={handleIconSelect}
+          onClose={() => setIconSelectorVisible(false)}
+        />
 
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
-      
-      {/* מודאל בחירת אייקון ליעד תרומה */}
-      <IconSelector 
-        visible={iconSelectorVisible}
-        onSelect={handleIconSelect}
-        onClose={() => setIconSelectorVisible(false)}
-      />
+        {/* מודאל התראה */}
+        <InfoAlertModal
+          visible={infoAlertVisible}
+          title={alertInfo.title}
+          message={alertInfo.message}
+          onClose={closeInfoAlert}
+          primaryColor={config.colors.secondary} // אפשר להשתמש בצבע משני מהקונפיג
+        />
 
-      {/* מודאל התראה */}
-      <InfoAlertModal
-        visible={infoAlertVisible}
-        title={alertInfo.title}
-        message={alertInfo.message}
-        onClose={closeInfoAlert}
-        primaryColor={config.colors.secondary} // אפשר להשתמש בצבע משני מהקונפיג
-      />
+        {/* מודאל מחיקת יעד */}
+        <DeleteConfirmationModal
+          visible={deleteModalVisible}
+          itemName={targetToDeleteIndex !== null ? editConfig.donation_targets[targetToDeleteIndex].name || "יעד ללא שם" : ""}
+          onConfirm={confirmDeleteTarget}
+          onCancel={() => {
+            setDeleteModalVisible(false);
+            setTargetToDeleteIndex(null);
+          }}
+          primaryColor={config.colors.primary} 
+        />
 
-      {/* מודאל מחיקת יעד */}
-      <DeleteConfirmationModal
-        visible={deleteModalVisible}
-        itemName={targetToDeleteIndex !== null ? editConfig.donation_targets[targetToDeleteIndex].name || "יעד ללא שם" : ""}
-        onConfirm={confirmDeleteTarget}
-        onCancel={() => {
-          setDeleteModalVisible(false);
-          setTargetToDeleteIndex(null);
-        }}
-        primaryColor={config.colors.primary} 
-      />
+        {/* מודאל הצלחה */}
+        <SuccessModal
+          visible={successModalVisible}
+          title="הצלחה! ✅"
+          message="כל ההגדרות נשמרו בהצלחה במערכת"
+          buttonText="סגור"
+          onButtonPress={handleSuccessModalClose}
+          primaryColor={config.colors.primary} // אם יש צבע הצלחה בקונפיג
+        />
 
-      {/* מודאל הצלחה */}
-      <SuccessModal
-        visible={successModalVisible}
-        title="הצלחה! ✅"
-        message="כל ההגדרות נשמרו בהצלחה במערכת"
-        buttonText="סגור"
-        onButtonPress={handleSuccessModalClose}
-        primaryColor={config.colors.primary} // אם יש צבע הצלחה בקונפיג
-      />
-
-    </View>
+      </View>
+    </AuthGuard>
   );
 }
 

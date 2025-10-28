@@ -1,14 +1,14 @@
+import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { MOCK_QR_CONFIG } from '../config/mockConfig';
 import { DonorAPI } from '../services/api';
 import { Validators } from '../services/validators';
 
 export default function PhoneVerificationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const config = MOCK_QR_CONFIG;
+  const { config } = useConfig();
   
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');

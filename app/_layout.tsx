@@ -1,15 +1,17 @@
 import { Stack } from 'expo-router';
 import { PaymentProvider } from '../context/PaymentContext';
+import { ConfigProvider } from '../context/configContext';
 
 export default function RootLayout() {
   return (
-    <PaymentProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#ffffff' }
-        }}
-      >
+    <ConfigProvider>
+      <PaymentProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: '#ffffff' }
+          }}
+        >
         <Stack.Screen name="login" />
         <Stack.Screen name="index" />
         <Stack.Screen name="home" />
@@ -28,7 +30,8 @@ export default function RootLayout() {
         <Stack.Screen name="gabbai-phone-verification" />
         <Stack.Screen name="gabbai-code-verification" />
         <Stack.Screen name="admin-settings" />
-      </Stack>
-    </PaymentProvider>
+        </Stack>
+      </PaymentProvider>
+    </ConfigProvider>
   );
 }

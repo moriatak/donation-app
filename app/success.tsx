@@ -1,13 +1,13 @@
+import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { MOCK_QR_CONFIG } from '../config/mockConfig';
 import { TaktzivitAPI } from '../services/api';
 
 export default function SuccessScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const config = MOCK_QR_CONFIG;
+  const { config } = useConfig();
   
   const [countdown, setCountdown] = useState(config.settings.auto_return_seconds);
   

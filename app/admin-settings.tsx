@@ -3,14 +3,15 @@ import InfoAlertModal from '@/components/InfoAlertModal';
 import SuccessModal from '@/components/SuccessModal';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, ScrollView, StatusBar, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import IconSelector from '../components/IconSelector';
-import { DonationTarget, MOCK_QR_CONFIG, SynagogueConfig } from '../config/mockConfig';
+import { DonationTarget, SynagogueConfig } from '../config/mockConfig';
+import { useConfig } from '../context/configContext';
 
 export default function AdminSettingsScreen() {
   const router = useRouter();
-  const [editConfig, setEditConfig] = useState<SynagogueConfig>(MOCK_QR_CONFIG);
-  const config = MOCK_QR_CONFIG;
+  const { config, updateConfig } = useConfig();
+  const [editConfig, setEditConfig] = useState<SynagogueConfig>(config);
   // מוסיפים סטייט לניהול מצב המודאל
   const [iconSelectorVisible, setIconSelectorVisible] = useState(false);
   const [selectedTargetIndex, setSelectedTargetIndex] = useState(0);
@@ -21,15 +22,19 @@ export default function AdminSettingsScreen() {
     title: '', 
     message: '' 
   });
+  const [quickAmountsText, setQuickAmountsText] = useState(
+    editConfig.quick_amounts.join(', ')
+  );
   const [successModalVisible, setSuccessModalVisible] = useState<boolean>(false);
 
   const handleSaveConfig = async () => {
     try {
-      // שמירת הנתונים...
-      
+      await updateConfig(editConfig);
+  
       setSuccessModalVisible(true);
     } catch (error) {
-      // טיפול בשגיאות...
+      console.error('Error saving config:', error);
+      // אפשר להוסיף הצגת הודעת שגיאה למשתמש
     }
   };
 
@@ -231,11 +236,25 @@ const handleSuccessModalClose = () => {
           <View style={styles.inputGroup}>
             <TextInput
               style={styles.textInput}
-              value={editConfig.quick_amounts.join(', ')}
-              onChangeText={(text) => setEditConfig({
-                ...editConfig,
-                quick_amounts: text.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
-              })}
+              value={quickAmountsText}
+              onChangeText={(text) => {
+                // עדכן את הטקסט מיד - זה מאפשר להקליד פסיקים
+                setQuickAmountsText(text);
+                
+                // נסה לפרסר ולעדכן את המערך
+                const numbers = text
+                  .split(',')
+                  .map(s => s.trim())
+                  .filter(s => s !== '')
+                  .map(s => parseInt(s))
+                  .filter(n => !isNaN(n));
+                
+                // תמיד עדכן את editConfig, גם אם המערך ריק
+                setEditConfig({
+                  ...editConfig,
+                  quick_amounts: numbers
+                });
+              }}
               placeholder="18, 36, 54, 100, 180"
               placeholderTextColor="#999"
               keyboardType="numbers-and-punctuation"
@@ -301,7 +320,7 @@ const handleSuccessModalClose = () => {
             />
           </View>
 
-          <View style={styles.switchRow}>
+          {/* <View style={styles.switchRow}>
             <Switch
               value={editConfig.settings.require_id}
               onValueChange={(value) => setEditConfig({
@@ -312,7 +331,7 @@ const handleSuccessModalClose = () => {
               thumbColor={editConfig.settings.require_id ? config.colors.primary : '#f3f4f6'}
             />
             <Text style={styles.switchLabel}>דרוש תעודת זהות לתרומה</Text>
-          </View>
+          </View> */}
         </View>
 
         {/* כפתור שמירה */}

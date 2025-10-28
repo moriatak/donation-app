@@ -1,14 +1,14 @@
+import { useConfig } from '@/context/configContext';
 import { TaktzivitAPI } from '@/services/api';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { MOCK_QR_CONFIG } from '../config/mockConfig';
 
 export default function BitPaymentScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const config = MOCK_QR_CONFIG;
+  const { config } = useConfig();
   const [loading, setLoading] = useState(true);
   const [paymentUrl, setPaymentUrl] = useState('');
   const [docToken, setDocToken] = useState('');

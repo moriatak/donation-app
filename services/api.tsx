@@ -1,5 +1,5 @@
-import { MOCK_QR_CONFIG } from '../config/mockConfig';
-const config = MOCK_QR_CONFIG;
+import { useConfig } from '@/context/configContext';
+const { config } = useConfig();
 
 const API_KEY = "a12y45bC4@1&&lo9OpC";
 const DONATION_API_ENDPOINT = "https://tak.co.il/donation_app/index.php";

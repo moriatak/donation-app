@@ -1,11 +1,11 @@
+import { useConfig } from '@/context/configContext';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { MOCK_QR_CONFIG } from '../config/mockConfig';
 
 export default function TargetSelectionScreen() {
   const router = useRouter();
-  const config = MOCK_QR_CONFIG;
+  const { config } = useConfig();
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
 
   const handleTargetPress = (target: any) => {

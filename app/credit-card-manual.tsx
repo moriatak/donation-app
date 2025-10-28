@@ -1,13 +1,13 @@
+import { useConfig } from '@/context/configContext';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { MOCK_QR_CONFIG } from '../config/mockConfig';
 import { usePaymentContext } from '../context/PaymentContext';
 
 export default function CreditCardManualScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const config = MOCK_QR_CONFIG;
+  const { config } = useConfig();
   
   const [cardData, setCardData] = useState({
     cardNumber: '',

@@ -1,7 +1,7 @@
+import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { MOCK_QR_CONFIG } from '../config/mockConfig';
 import { Validators } from '../services/validators';
 
 interface FormData {
@@ -24,7 +24,7 @@ interface Errors {
 export default function DetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const config = MOCK_QR_CONFIG;
+  const { config } = useConfig();
   
   // בדיקה אם זה תורם מאומת
   const isVerified = params.isVerified === 'true';

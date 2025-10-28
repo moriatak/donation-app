@@ -1,18 +1,13 @@
+import { useConfig } from '@/context/configContext';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import HebrewDate from '../components/HebrewDate';
-import { MOCK_QR_CONFIG, SynagogueConfig } from '../config/mockConfig';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [config, setConfig] = useState(MOCK_QR_CONFIG);
+  const { config } = useConfig();
   const [logoError, setLogoError] = useState(false);
-
-  const handleConfigSave = (newConfig: SynagogueConfig) => {
-    setConfig(newConfig);
-    // שמירה ל-AsyncStorage אם צריך
-  };
 
   const handlePhoneIconPress = () => {
     router.push('/gabbai-phone-verification');
@@ -62,6 +57,7 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={[styles.donationButton, { backgroundColor: config.colors.primary }]}
           onPress={() => router.push('/target-selection')}
+          // onPress={() => router.push('/payment-method')}
           activeOpacity={0.8}
         >
           <Text style={styles.donationButtonText}>תרומה חדשה</Text>

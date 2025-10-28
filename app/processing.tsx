@@ -1,14 +1,14 @@
+import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useId } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { MOCK_QR_CONFIG } from '../config/mockConfig';
 import { usePaymentContext } from '../context/PaymentContext';
 import { TaktzivitAPI } from '../services/api';
 
 export default function ProcessingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const config = MOCK_QR_CONFIG;
+  const { config } = useConfig();
   const { sensitiveCardData, setSensitiveCardData } = usePaymentContext();
   const reactId = useId();
   const transactionId = `TRX_${Date.now()}_${reactId.replace(/:/g, '')}`;

@@ -1,14 +1,15 @@
+import { useConfig } from '@/context/configContext';
 import { DonorAPI } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Camera, CameraView } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { MOCK_QR_CONFIG, SynagogueConfig } from '../config/mockConfig';
+import { SynagogueConfig } from '../config/mockConfig';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const config = MOCK_QR_CONFIG;
+  const { config, updateConfig } = useConfig();
   
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
@@ -66,7 +67,8 @@ export default function LoginScreen() {
       const settings = await DonorAPI.getSettings(tokenToUse);
       
       if (settings.success && settings.settings) {
-        updateConfigFromResponse(settings.settings, config);
+        // השתמש בפונקציה החדשה לעדכון הקונפיג
+        await updateConfigFromResponse(settings.settings, config);
         
         setShowSuccessModal(true);
   
@@ -131,7 +133,7 @@ export default function LoginScreen() {
     }
   };
 
-  const updateConfigFromResponse = (settings: any, config: SynagogueConfig): SynagogueConfig => {
+  const updateConfigFromResponse = async (settings: any, config: SynagogueConfig) => {
     try {      
       if (settings.donationAppName) {
         config.synagogue.name = settings.donationAppName;
@@ -165,14 +167,9 @@ export default function LoginScreen() {
         console.log('Updated synagogue compToken to:', settings.compToken);
 
       }
-
-      AsyncStorage.setItem('synagogueConfig', JSON.stringify(config))
-        .catch(err => console.log('Failed to save updated config', err));
-      
-      return config;
+      await updateConfig(config);
     } catch (error) {
       console.log('Error updating config from response:', error);
-      return config;
     }
   };
 

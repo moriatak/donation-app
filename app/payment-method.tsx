@@ -1,14 +1,14 @@
+import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { MOCK_QR_CONFIG } from '../config/mockConfig';
 
 type PaymentMethod = 'bit' | 'credit-tap' | 'credit-manual';
 
 export default function PaymentMethodScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const config = MOCK_QR_CONFIG;
+  const { config } = useConfig();
   
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
 

@@ -30,6 +30,19 @@ export interface DonationData {
   dedication?: string;
 }
 
+export interface SettingsResponse {
+  success: boolean;
+  settings?: {
+    companyId: string;
+    compToken: string;
+    compId: string;
+    logo: string;
+    donationAppName: string;
+    bitOption: boolean;
+  };
+  message?: string;
+}
+
 export const TaktzivitAPI = {
   createIntent: async (data: DonationData): Promise<IntentResponse> => {
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -193,6 +206,69 @@ export const TaktzivitAPI = {
 
 // ✅ עדכון DonorAPI להתחבר לשרת האמיתי
 export const DonorAPI = {
+  // משיכת הגדרות המערכת
+  getSettings: async (apiToken: string): Promise<SettingsResponse> => {
+    try {
+      // apiToken = 'zr_54321zyxwv'
+      const parameters = new FormData();
+      parameters.append('get_setting', 'true');
+      parameters.append('apiKey', API_KEY);
+      parameters.append('api_token', apiToken);
+
+      // הדפסת הבקשה ללוג לפני שליחה
+      console.log('======== GET SETTINGS REQUEST ========');
+      console.log('URL:', DONATION_API_ENDPOINT);
+      console.log('METHOD: POST');
+      console.log('PARAMS: { get_setting: true, apiKey: ****, api_token:', apiToken, '}');
+      console.log('======================================');
+
+      const response = await fetch(DONATION_API_ENDPOINT, {
+        method: 'POST',
+        body: parameters,
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        
+        // הדפסת התשובה שהתקבלה
+        console.log('======== GET SETTINGS RESPONSE ========');
+        console.log(JSON.stringify(responseData, null, 2));
+        console.log('=======================================');
+
+        // השרת מחזיר ישירות את האובייקט עם הנתונים
+        if (responseData.companyId && responseData.compToken) {
+          return {
+            success: true,
+            settings: {
+              companyId: responseData.companyId,
+              compToken: responseData.compToken,
+              compId: responseData.compId,
+              logo: responseData.logo,
+              donationAppName: responseData.donationAppName,
+              bitOption: responseData.bitOption
+            }
+          };
+        } else {
+          return {
+            success: false,
+            message: 'לא נמצאו הגדרות למערכת'
+          };
+        }
+      } else {
+        return {
+          success: false,
+          message: 'אירעה שגיאה בתקשורת עם השרת'
+        };
+      }
+    } catch (error) {
+      console.log('Error getting settings:', error);
+      return {
+        success: false,
+        message: 'אירעה שגיאה בטעינת הגדרות המערכת'
+      };
+    }
+  },
+
   // שליחת קוד אימות
   sendVerificationCode: async (phone: string): Promise<{ 
     success: boolean; 

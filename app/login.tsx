@@ -1,263 +1,204 @@
+import { DonorAPI } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Camera, CameraView } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MOCK_QR_CONFIG, SynagogueConfig } from '../config/mockConfig';
-
-// API Service
-const API = {
-  login: async (name: string, terminal: string, company: string) => {
-    try {
-      const response = await fetch('https://tak.co.il/cashier/index.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `name=${encodeURIComponent(name)}&terminal=${encodeURIComponent(terminal)}&company=${encodeURIComponent(company)}`,
-      });
-      
-      const data = await response.json();
-
-    if (!data.success) {
-    throw new Error(data.message);
-    }
-
-    // בדיקה אם message הוא מחרוזת
-    if (typeof data.message === 'string') {
-    try {
-        // ניסיון לפרסר את המחרוזת כ-JSON
-        return JSON.parse(data.message);
-    } catch (e) {
-        // במקרה שהפרסור נכשל
-        throw new Error(data.message);
-    }
-    } else {
-    // אם message אינו מחרוזת
-    throw new Error(String(data.message));
-    }
-    
-    } catch (error) {
-      throw error;
-    }
-  }
-};
 
 export default function LoginScreen() {
   const router = useRouter();
   const config = MOCK_QR_CONFIG;
   
-  const [name, setName] = useState('');
-  const [terminalName, setTerminalName] = useState('');
-  const [companyNumber, setCompanyNumber] = useState('');
-  const [errors, setErrors] = useState({
-    name: '',
-    terminalName: '',
-    companyNumber: ''
-  });
+  const [token, setToken] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // Load saved credentials when component mounts
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [scanned, setScanned] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   useEffect(() => {
-    loadSavedCredentials();
+    loadSavedToken();
   }, []);
   
-  const loadSavedCredentials = async () => {
+  const loadSavedToken = async () => {
     try {
-      const savedName = await AsyncStorage.getItem('name');
-      const savedTerminal = await AsyncStorage.getItem('terminal');
-      const savedCompany = await AsyncStorage.getItem('company');
-      
-      if (savedName) setName(savedName);
-      if (savedTerminal) setTerminalName(savedTerminal);
-      if (savedCompany) setCompanyNumber(savedCompany);
+      const savedToken = await AsyncStorage.getItem('token');
+      if (savedToken) setToken(savedToken);
     } catch (error) {
-      console.error('Failed to load saved credentials', error);
+      console.log('Failed to load saved token', error);
     }
   };
   
-  const saveCredentials = async () => {
+  const saveToken = async (tokenValue: string) => {
     try {
-      await AsyncStorage.setItem('name', name);
-      await AsyncStorage.setItem('terminal', terminalName);
-      await AsyncStorage.setItem('company', companyNumber);
+      await AsyncStorage.setItem('token', tokenValue);
     } catch (error) {
-      console.error('Failed to save credentials', error);
+      console.log('Failed to save token', error);
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {
-      name: name.trim() === '' ? 'שם הוא שדה חובה' : '',
-      terminalName: terminalName.trim() === '' ? 'שם מסוף הוא שדה חובה' : '',
-      companyNumber: companyNumber.trim() === '' ? 'מספר חברה הוא שדה חובה' : ''
-    };
-
-    // Check if terminal name is too long (like in Kotlin code)
-    if (terminalName.length >= 50) {
-      newErrors.terminalName = 'שם מסוף ארוך מדי';
+  const validateToken = (tokenValue: string) => {
+    if (tokenValue.trim() === '') {
+      setError('טוקן הוא שדה חובה');
+      return false;
     }
-
-    setErrors(newErrors);
-    return !Object.values(newErrors).some(error => error !== '');
+    setError('');
+    return true;
   };
 
-  const handleLogin = async () => {
-    if (!validateForm()) {
+  const handleLogin = async (tokenFromQR: string = '') => {
+    // אם קיבלנו טוקן מ-QR נשתמש בו, אחרת נשתמש בטוקן מה-state
+    const tokenToUse = tokenFromQR || token;
+    
+    if (!validateToken(tokenToUse)) {
       return;
     }
     
     setLoading(true);
     
     try {
-      // Save credentials
-      await saveCredentials();
+      // Save token
+      await saveToken(tokenToUse);
       
-      // Call login API
-      const result = await API.login(name, terminalName, companyNumber);
-    
-      updateConfigFromResponse(result,config);
+      // Get settings with token
+      const settings = await DonorAPI.getSettings(tokenToUse);
       
-      // If login successful, navigate to Home and pass data
-      router.push({
-        pathname: '/Home',
-        params: {
-        }
-      });
-      
+      if (settings.success && settings.settings) {
+        updateConfigFromResponse(settings.settings, config);
+        
+        setShowSuccessModal(true);
+  
+        // עבור למסך הבית אחרי 1.5 שניות
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          router.push({
+            pathname: '/Home',
+            params: {}
+          });
+        }, 1500);
+      } else {
+        Alert.alert('שגיאת התחברות', settings.message || 'טוקן לא תקין');
+        setError('טוקן לא תקין');
+      }
     } catch (error: any) {
       Alert.alert('שגיאת התחברות', error.message || 'אירעה שגיאה בהתחברות');
+      setError('אירעה שגיאה בהתחברות');
     } finally {
       setLoading(false);
     }
   };
-  const updateConfigFromResponse = (messageObject: any, config: SynagogueConfig): SynagogueConfig => {
-    try {
-      // message -> kupaInfo
-        // כעת נוכל לגשת ל-kupaInfo
-        if (messageObject && messageObject.kupaInfo) {
-          let kupaInfoArray;
-          
-          // בדוק אם kupaInfo הוא מחרוזת או מערך
-          if (typeof messageObject.kupaInfo === 'string') {
-            try {
-              kupaInfoArray = JSON.parse(messageObject.kupaInfo);
-            } catch (e) {
-              console.error('Failed to parse kupaInfo as JSON:', e);
-              return config;
-            }
-          } else {
-            kupaInfoArray = messageObject.kupaInfo;
-          }
 
-          // בדוק שיש מידע במערך
-          if (Array.isArray(kupaInfoArray) && kupaInfoArray.length > 0) {
-            const kupaData = kupaInfoArray[0];
-            
-            console.log('Found kupaData:', kupaData); // לוג לדיבוג
-            
-            // עדכון שם בית הכנסת אם קיים
-            if (kupaData.kupaKabalaName) {
-              config.synagogue.name = kupaData.kupaKabalaName;
-              console.log('Updated synagogue name to:', kupaData.kupaKabalaName);
-            }
-
-            // אפשר להוסיף עוד שדות שרוצים לעדכן כאן
-            if (kupaData.kupaLogoUrl) {
-              config.synagogue.logo_url = kupaData.kupaLogoUrl;
-            }
-            
-            // עדכון הגדרות
-
-            // עדכון אפשרות תשלום בביט
-            if (kupaData.bitOption && kupaData.bitOption == true) {
-                config.settings.bit_option = true;
-                console.log('Updated settings bitOption to:', true);
-            } else {
-                config.settings.bit_option = false;
-                console.log('Updated settings bitOption to:', false);
-            }
-            
-            // עדכון מזהה חברה
-            if (kupaData.companyId) {
-              config.settings.companyId = kupaData.companyId;
-            }
-            // עדכון מזהה קמפיין
-            if (kupaData.compId) {
-              config.settings.copmainingId = kupaData.compId;
-            }
-            // עדכון טוקן קמפיין
-            if (kupaData.compToken) {
-              config.settings.copmainingToken = kupaData.compToken;
-            }
-            // עדכון שם מסוף
-            if (kupaData.terminalName) {
-              config.settings.terminalName = kupaData.terminalName;
-            }
-            
-            // עדכון צבעים אם קיימים
-            if (kupaData.kupaPrimaryColor) {
-              config.colors.primary = kupaData.kupaPrimaryColor;
-            }
-            if (kupaData.kupaSecondaryColor) {
-              config.colors.secondary = kupaData.kupaSecondaryColor;
-            }
-            if (kupaData.kupaBackgroundColor) {
-              config.colors.background = kupaData.kupaBackgroundColor;
-            }
-            
-            // שמירת הקונפיגורציה המעודכנת
-            AsyncStorage.setItem('synagogueConfig', JSON.stringify(config))
-              .catch(err => console.error('Failed to save updated config', err));
-          }
-        } else {
-          console.log('kupaInfo not found in message object:');
-        //   console.log('kupaInfo not found in message object:', messageObject);
-        }
-        
-      return config;
-    } catch (error) {
-      console.error('Error updating config from response:', error);
-      return config; // החזרת הקונפיג המקורי במקרה של שגיאה
+  const handleQRScan = async () => {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    setHasPermission(status === 'granted');
+    
+    if (status === 'granted') {
+      setShowQRScanner(true);
+      setScanned(false);
+    } else {
+      Alert.alert('אין הרשאה', 'יש לאפשר גישה למצלמה כדי לסרוק QR');
     }
   };
 
-  type FieldProps = {
-    label: string;
-    value: string;
-    setter: (text: string) => void;
-    errorMessage: string;
-    placeholder: string;
-    keyboardType?: 'default' | 'number-pad' | 'decimal-pad' | 'numeric' | 'email-address' | 'phone-pad';
+  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+    if (scanned) return;
+    
+    setScanned(true);
+    setShowQRScanner(false);
+    console.log('QR data:', data);
+    
+    try {
+      // נניח שה-QR מכיל את הטוקן (או JSON עם token)
+      let tokenFromQR = data;
+      
+      // אם זה JSON, נחלץ את הטוקן
+      try {
+        const qrData = JSON.parse(data);
+        if (qrData.token) {
+          tokenFromQR = qrData.token;
+        }
+      } catch {
+        // אם זה לא JSON, נשתמש בערך כמו שהוא
+      }
+      console.log('Token from QR:', tokenFromQR);
+      // התחברות אוטומטית עם הטוקן מה-QR
+      handleLogin(tokenFromQR);
+    } catch (error) {
+      console.log('QR scan error:', error);
+      Alert.alert('שגיאה', 'קוד QR לא תקין');
+    }
   };
 
-  const renderField = ({
-    label, 
-    value, 
-    setter, 
-    errorMessage, 
-    placeholder, 
-    keyboardType = 'default'
-  }: FieldProps) => (
-    <View style={styles.inputGroup}>
-      <Text style={[styles.label, { color: config.colors.primary }]}>
-        {label}
-      </Text>
-      <TextInput
-        style={[
-          styles.input,
-          { borderColor: errorMessage ? '#ef4444' : config.colors.secondary }
-        ]}
-        value={value}
-        onChangeText={(text: string) => {
-          setter(text);
-          setErrors(prev => ({ ...prev, [label.toLowerCase()]: '' }));
-        }}
-        placeholder={placeholder}
-        keyboardType={keyboardType}
-        textAlign="right"
-      />
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-    </View>
+  const updateConfigFromResponse = (settings: any, config: SynagogueConfig): SynagogueConfig => {
+    try {      
+      if (settings.donationAppName) {
+        config.synagogue.name = settings.donationAppName;
+        console.log('Updated synagogue name to:', settings.donationAppName);
+      }
+      if (settings.logo) {
+        config.synagogue.logo_url = settings.logo;
+        console.log('Updated synagogue logo_url to:', settings.logo);
+
+      }
+      if (settings.bitOption && settings.bitOption == true) {
+        config.settings.bit_option = true;
+        console.log('Updated settings bitOption to:', true);
+      } else {
+        config.settings.bit_option = false;
+        console.log('Updated settings bitOption to:', false);
+      }
+      
+      if (settings.companyId) {
+        config.settings.companyId = settings.companyId;
+        console.log('Updated synagogue companyId to:', settings.companyId);
+        
+      }
+      if (settings.compId) {
+        config.settings.copmainingId = settings.compId;
+        console.log('Updated synagogue copmainingId to:', settings.copmainingId);
+
+      }
+      if (settings.compToken) {
+        config.settings.copmainingToken = settings.compToken;
+        console.log('Updated synagogue compToken to:', settings.compToken);
+
+      }
+
+      AsyncStorage.setItem('synagogueConfig', JSON.stringify(config))
+        .catch(err => console.log('Failed to save updated config', err));
+      
+      return config;
+    } catch (error) {
+      console.log('Error updating config from response:', error);
+      return config;
+    }
+  };
+
+  // הצגת הודעת הצלחת טעינת הגדרות
+  const SuccessModal = ({ visible, onContinue }: { visible: boolean; onContinue: () => void }) => (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+    >
+      <View style={styles.successModalOverlay}>
+        <View style={styles.successModalContent}>
+          <View style={styles.successIconContainer}>
+            <Text style={styles.successIcon}>✓</Text>
+          </View>
+          <Text style={styles.successTitle}>התחברות הצליחה!</Text>
+          <Text style={styles.successMessage}>ברוך הבא למערכת</Text>
+          <TouchableOpacity
+            style={[styles.successButton, { backgroundColor: config.colors.primary }]}
+            onPress={onContinue}
+          >
+            <Text style={styles.successButtonText}>המשך</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
   );
 
   return (
@@ -268,39 +209,57 @@ export default function LoginScreen() {
       
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          {/* <Text style={styles.icon}>📱⋯⋯📱</Text> */}
           <Text style={styles.icon}>🔐</Text>
         </View>
         
         <Text style={[styles.description, { color: config.colors.primary }]}>
-          ברוכים הבאים  
+          ברוכים הבאים
         </Text>
         <Text style={styles.subdescription}>
-          בכדי לחבר את המכשיר למערכת, אנא הזינו את הפרטים  
+          סרקו קוד QR או הזינו טוקן להתחברות
         </Text>
+
+        {/* כפתור סריקת QR */}
+        <TouchableOpacity
+          style={[styles.qrButton, { borderColor: config.colors.primary }]}
+          onPress={handleQRScan}
+          disabled={loading}
+        >
+          <Text style={styles.qrIcon}>📷</Text>
+          <Text style={[styles.qrButtonText, { color: config.colors.primary }]}>
+            סרוק קוד QR
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>או הזן טוקן</Text>
+          <View style={styles.dividerLine} />
+        </View>
         
-        {renderField({
-          label: 'שם',
-          value: name,
-          setter: setName,
-          errorMessage: errors.name,
-          placeholder: 'הזן שם מלא'
-        })}
-        {renderField({
-          label: 'מסוף',
-          value: terminalName,
-          setter: setTerminalName,
-          errorMessage: errors.terminalName,
-          placeholder: 'הזן שם מסוף'
-        })}
-        {renderField({
-          label: 'חברה',
-          value: companyNumber,
-          setter: setCompanyNumber,
-          errorMessage: errors.companyNumber,
-          placeholder: 'הזן מספר חברה',
-          keyboardType: 'number-pad'
-        })}
+        {/* שדה טוקן */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, { color: config.colors.primary }]}>
+            טוקן
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              { borderColor: error ? '#ef4444' : config.colors.secondary }
+            ]}
+            value={token}
+            onChangeText={(text: string) => {
+              setToken(text);
+              setError('');
+            }}
+            placeholder="הזן טוקן"
+            textAlign="right"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+          />
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        </View>
         
         <TouchableOpacity
           style={[
@@ -308,7 +267,7 @@ export default function LoginScreen() {
             { backgroundColor: config.colors.primary },
             loading && styles.disabled
           ]}
-          onPress={handleLogin}
+          onPress={() => handleLogin()}
           disabled={loading}
         >
           {loading ? (
@@ -318,6 +277,64 @@ export default function LoginScreen() {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* QR Scanner Modal */}
+      <Modal
+        visible={showQRScanner}
+        animationType="slide"
+        onRequestClose={() => setShowQRScanner(false)}
+      >
+        <View style={styles.qrScannerContainer}>
+          <View style={styles.qrScannerHeader}>
+            <Text style={styles.qrScannerTitle}>סרוק קוד QR</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowQRScanner(false)}
+            >
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {hasPermission === null ? (
+            <View style={styles.qrScannerContent}>
+              <Text style={styles.permissionText}>מבקש הרשאת מצלמה...</Text>
+            </View>
+          ) : hasPermission === false ? (
+            <View style={styles.qrScannerContent}>
+              <Text style={styles.permissionText}>אין גישה למצלמה</Text>
+            </View>
+          ) : (
+            <CameraView
+              style={styles.camera}
+              facing="back"
+              onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+              barcodeScannerSettings={{
+                barcodeTypes: ['qr'],
+              }}
+            >
+              <View style={styles.qrFrame}>
+                <View style={[styles.qrCorner, styles.topLeft]} />
+                <View style={[styles.qrCorner, styles.topRight]} />
+                <View style={[styles.qrCorner, styles.bottomLeft]} />
+                <View style={[styles.qrCorner, styles.bottomRight]} />
+              </View>
+              <Text style={styles.qrInstructions}>
+                מקם את קוד ה-QR במרכז המסגרת
+              </Text>
+            </CameraView>
+          )}
+        </View>
+      </Modal>
+      <SuccessModal 
+        visible={showSuccessModal} 
+        onContinue={() => {
+          setShowSuccessModal(false);
+          router.push({
+            pathname: '/Home',
+            params: {}
+          });
+        }} 
+      />
     </View>
   );
 }
@@ -367,7 +384,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6b7280',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
+  },
+  qrButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderWidth: 2,
+    borderRadius: 12,
+    marginBottom: 20,
+    backgroundColor: 'white',
+  },
+  qrIcon: {
+    fontSize: 24,
+    marginLeft: 10,
+  },
+  qrButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#d1d5db',
+  },
+  dividerText: {
+    marginHorizontal: 15,
+    color: '#6b7280',
+    fontSize: 14,
   },
   inputGroup: { 
     marginBottom: 20 
@@ -417,4 +467,151 @@ const styles = StyleSheet.create({
     fontSize: 22, 
     fontWeight: 'bold' 
   },
+  qrScannerContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  qrScannerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  qrScannerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  closeButton: {
+    padding: 10,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  qrScannerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  permissionText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  camera: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  qrFrame: {
+    width: 250,
+    height: 250,
+    position: 'relative',
+  },
+  qrCorner: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderColor: '#4ade80',
+  },
+  topLeft: {
+    top: 0,
+    left: 0,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopLeftRadius: 20,
+  },
+  topRight: {
+    top: 0,
+    right: 0,
+    borderTopWidth: 4,
+    borderRightWidth: 4,
+    borderTopRightRadius: 20,
+  },
+  bottomLeft: {
+    bottom: 0,
+    left: 0,
+    borderBottomWidth: 4,
+    borderLeftWidth: 4,
+    borderBottomLeftRadius: 20,
+  },
+  bottomRight: {
+    bottom: 0,
+    right: 0,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderBottomRightRadius: 20,
+  },
+  qrInstructions: {
+    position: 'absolute',
+    bottom: 100,
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    padding: 15,
+    borderRadius: 10,
+  },
+  // הוסף את זה בסוף ה-StyleSheet
+successModalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+successModalContent: {
+  backgroundColor: 'white',
+  borderRadius: 20,
+  padding: 30,
+  alignItems: 'center',
+  width: '80%',
+  maxWidth: 350,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.3,
+  shadowRadius: 10,
+  elevation: 10,
+},
+successIconContainer: {
+  width: 80,
+  height: 80,
+  borderRadius: 40,
+  backgroundColor: '#10b981',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginBottom: 20,
+},
+successIcon: {
+  fontSize: 50,
+  color: 'white',
+  fontWeight: 'bold',
+},
+successTitle: {
+  fontSize: 24,
+  fontWeight: 'bold',
+  color: '#1f2937',
+  marginBottom: 10,
+  textAlign: 'center',
+},
+successMessage: {
+  fontSize: 16,
+  color: '#6b7280',
+  marginBottom: 25,
+  textAlign: 'center',
+},
+successButton: {
+  paddingVertical: 15,
+  paddingHorizontal: 40,
+  borderRadius: 12,
+  width: '100%',
+},
+successButtonText: {
+  color: 'white',
+  fontSize: 18,
+  fontWeight: 'bold',
+  textAlign: 'center',
+},
 });

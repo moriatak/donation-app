@@ -270,10 +270,9 @@ const styles = StyleSheet.create({
   targetIcon: { fontSize: 40, marginBottom: 10 },
   targetName: { fontSize: 20, fontWeight: 'bold' },
   grid: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     flexWrap: 'wrap',
-    // justifyContent: 'space-between',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     marginBottom: 20,
   },
   amountButton: {
@@ -281,8 +280,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 20,
     borderRadius: 15,
-    margin: 9,
-    marginBottom: 10,
+    marginBottom: 15,
     alignItems: 'center',
     borderWidth: 2,
     shadowColor: '#000',

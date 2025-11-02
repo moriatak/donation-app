@@ -151,6 +151,22 @@ export default function LoginScreen() {
         config.settings.bit_option = false;
         console.log('Updated settings bitOption to:', false);
       }
+
+      if (settings.paxShopOpt && settings.paxShopOpt == true) {
+        config.settings.pax_shop_opt = true;
+        console.log('Updated settings bitOption to:', true);
+      } else {
+        config.settings.pax_shop_opt = false;
+        console.log('Updated settings bitOption to:', false);
+      }
+
+      if (settings.showNameTerminal && settings.showNameTerminal == true) {
+        config.settings.showNameTerminal = true;
+        console.log('Updated settings showNameTerminal to:', true);
+      } else {
+        config.settings.showNameTerminal = false;
+      }
+      
       
       if (settings.companyId) {
         config.settings.companyId = settings.companyId;
@@ -165,7 +181,11 @@ export default function LoginScreen() {
       if (settings.compToken) {
         config.settings.copmainingToken = settings.compToken;
         console.log('Updated synagogue compToken to:', settings.compToken);
+      }
 
+      if (settings.terminalName) {
+        config.settings.terminalName = settings.terminalName;
+        console.log('Updated synagogue terminalName to:', settings.terminalName);
       }
       await updateConfig(config);
     } catch (error) {

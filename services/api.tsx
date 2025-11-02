@@ -38,6 +38,8 @@ export interface SettingsResponse {
     logo: string;
     donationAppName: string;
     bitOption: boolean;
+    paxShopOpt: boolean;
+    terminalName: string
   };
   message?: string;
 }
@@ -246,6 +248,8 @@ export const DonorAPI = {
               logo: responseData.logo,
               donationAppName: responseData.donationAppName,
               bitOption: responseData.bitOption,
+              paxShopOpt: responseData.paxShopOpt,
+              terminalName: responseData.terminalName
             }
           };
         } else {

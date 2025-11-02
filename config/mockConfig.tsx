@@ -19,6 +19,8 @@ export interface SynagogueConfig {
     idle_timeout_seconds: number;
     require_id: boolean;
     bit_option: boolean;
+    pax_shop_opt: boolean;
+    showNameTerminal: boolean;
   };
 }
 
@@ -54,6 +56,8 @@ export const MOCK_QR_CONFIG: SynagogueConfig = {
     auto_return_seconds: 60,
     idle_timeout_seconds: 120,
     require_id: false,
-    bit_option: true
+    bit_option: false,
+    pax_shop_opt: false,
+    showNameTerminal: false
   }
 };

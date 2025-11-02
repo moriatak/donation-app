@@ -1,7 +1,6 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import NfcManager, { NfcTech } from 'react-native-nfc-manager';
 import { MOCK_QR_CONFIG } from '../config/mockConfig';
 import { usePaymentContext } from '../context/PaymentContext';
 
@@ -36,12 +35,7 @@ export default function CreditCardNfcScreen() {
   useEffect(() => {
     const checkNfc = async () => {
       try {
-        const supported = await NfcManager.isSupported();
-        setIsNfcSupported(supported);
         
-        if (supported) {
-          await NfcManager.start();
-        }
       } catch (error) {
         console.log('NFC error:', error);
         setIsNfcSupported(false);
@@ -52,9 +46,6 @@ export default function CreditCardNfcScreen() {
     
     // ניקוי בעת סגירת הקומפוננטה
     return () => {
-      NfcManager.cancelTechnologyRequest().catch(() => {
-        // אם יש שגיאה בביטול הטכנולוגיה, נתעלם
-      });
     };
   }, []);
 
@@ -75,11 +66,7 @@ export default function CreditCardNfcScreen() {
       setScanError('');
       
       // הפעלת קורא ה-NFC
-      await NfcManager.requestTechnology(NfcTech.IsoDep);
     
-          // שימוש במחרוזת ישירות במקום NfcTech.IsoDep
-          // await NfcManager.requestTechnology('iso-dep');
-      
       // סימולציה של קריאת כרטיס - במציאות כאן תהיה הקריאה האמיתית של הכרטיס
       // קריאת APDU מהכרטיס
       setTimeout(() => {
@@ -95,14 +82,12 @@ export default function CreditCardNfcScreen() {
         setIsScanning(false);
         
         // שחרור הטכנולוגיה
-        NfcManager.cancelTechnologyRequest().catch(() => {});
       }, 2000);
       
     } catch (error) {
       console.log('Error during NFC scan:', error);
       setIsScanning(false);
       setScanError('אירעה שגיאה בקריאת הכרטיס. אנא נסה שנית.');
-      NfcManager.cancelTechnologyRequest().catch(() => {});
     }
   };
 

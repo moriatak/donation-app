@@ -1,7 +1,8 @@
 import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
+import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type PaymentMethod = 'bit' | 'credit-tap' | 'credit-manual';
@@ -12,22 +13,42 @@ export default function PaymentMethodScreen() {
   const { config } = useConfig();
   
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false); // משתנה חדש
 
   const paymentMethods = [
-    ...(config.settings?.bit_option ? [{
-      id: 'bit' as PaymentMethod,
-      name: 'ביט',
-      icon: '💳',
-      description: 'תשלום מהיר דרך אפליקציית ביט',
-      color: '#0099FF'
-    }] : []),
-    {
+    ...(config.settings?.pax_shop_opt ? [{
       id: 'credit-tap' as PaymentMethod,
       name: 'אשראי בטאץ׳',
       icon: '📱',
       description: 'הצמד כרטיס אשראי לקורא',
       color: '#8B5CF6'
-    },
+    }] : [] ),
+    ...(config.settings?.bit_option ? [{
+      id: 'bit' as PaymentMethod,
+      name: 'ביט',
+      icon: () => (
+        <View style={{ 
+          width: 40, 
+          height: 40, 
+          backgroundColor: '#004040', 
+          borderRadius: 10, 
+          justifyContent: 'center', 
+          alignItems: 'center' 
+        }}>
+          <Text style={{ 
+            color: '#40E0E0', 
+            fontWeight: 'bold', 
+            fontSize: 20,
+            fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif',
+            letterSpacing: -0.5
+          }}>
+            bit
+          </Text>
+        </View>
+      ),
+      description: 'תשלום מהיר דרך אפליקציית ביט',
+      color: '#0066CC'
+    }] : []),
     {
       id: 'credit-manual' as PaymentMethod,
       name: 'אשראי הקלדה',
@@ -37,25 +58,38 @@ export default function PaymentMethodScreen() {
     }
   ];
 
-  const handleMethodSelect = (method: PaymentMethod) => {
-    setSelectedMethod(method);
-  };
+  useFocusEffect(
+    useCallback(() => {
+      // איפוס המצב בכל פעם שהמסך מקבל פוקוס
+      setIsProcessing(false);
+      setSelectedMethod(null);
+      
+      return () => {
+        // פונקציה שתרוץ כשעוזבים את המסך (אופציונלי)
+      };
+    }, [])
+  );
 
-  const handleContinue = () => {
-    if (!selectedMethod) return;
+  const handleMethodSelect = (method: PaymentMethod) => {
+    // אם כבר מתבצע עיבוד, נצא מהפונקציה
+    if (isProcessing) return;
     
-    if (selectedMethod === 'bit') {
+    // מסמנים שהתחיל תהליך
+    setIsProcessing(true);
+    setSelectedMethod(method);
+    
+    // מיד אחרי בחירת אמצעי התשלום, נעבור לדף הבא
+    if (method === 'bit') {
       router.push({
         pathname: '/bit-payment',
         params: { ...params, paymentMethod: 'bit' }
       });
-    } else if (selectedMethod === 'credit-manual') {
+    } else if (method === 'credit-manual') {
       router.push({
         pathname: '/credit-card-manual',
         params: { ...params }
       });
-    } else if (selectedMethod === 'credit-tap') {
-      // בטאץ' - ישירות לעיבוד
+    } else if (method === 'credit-tap') {
       router.push({
         pathname: '/processing',
         params: { ...params, paymentMethod: 'credit-tap' }
@@ -90,13 +124,17 @@ export default function PaymentMethodScreen() {
                     backgroundColor: method.color,
                     borderColor: method.color,
                     borderWidth: 3
-                  }
+                  },
+                  // נוסיף סגנון מעומעם לכפתורים כשמתבצע עיבוד
+                  isProcessing && method.id !== selectedMethod && { opacity: 0.5 }
                 ]}
                 onPress={() => handleMethodSelect(method.id)}
                 activeOpacity={0.7}
+                // נשבית את כל הכפתורים כשמתבצע עיבוד
+                disabled={isProcessing}
               >
                 <View style={styles.methodContent}>
-                  <Text style={styles.methodIcon}>{method.icon}</Text>
+                {typeof method.icon === 'function' ? method.icon() : <Text style={styles.methodIcon}>{method.icon}</Text>}
                   <View style={styles.methodTextContainer}>
                     <Text style={[
                       styles.methodName,
@@ -121,17 +159,6 @@ export default function PaymentMethodScreen() {
             ))}
           </View>
           
-          <TouchableOpacity
-            style={[
-              styles.continueButton,
-              { backgroundColor: config.colors.primary },
-              !selectedMethod && styles.disabled
-            ]}
-            onPress={handleContinue}
-            disabled={!selectedMethod}
-          >
-            <Text style={styles.continueText}>המשך לאישור</Text>
-          </TouchableOpacity>
         </ScrollView>
       </View>
     </AuthGuard>

@@ -133,7 +133,7 @@ const handleSuccessModalClose = () => {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           
           {/* פרטי בית כנסת */}
-          {/* <View style={styles.card}>
+          <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardIcon}>🕍</Text>
               <Text style={[styles.cardTitle, { color: config.colors.primary }]}>
@@ -156,7 +156,21 @@ const handleSuccessModalClose = () => {
               />
             </View>
             
-            <View style={styles.inputGroup}>
+            {config.settings.showNameTerminal ? <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>שם מסוף</Text>
+              <TextInput
+                style={styles.textInput}
+                value={editConfig.settings.terminalName}
+                onChangeText={(text) => setEditConfig({
+                  ...editConfig,
+                  settings: { ...editConfig.settings, terminalName: text }
+                })}
+                placeholder="שם מסוף"
+                placeholderTextColor="#999"
+                textAlign="right"
+              />
+            </View>: null}
+            {/* <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>כתובת לוגו (URL)</Text>
               <TextInput
                 style={styles.textInput}
@@ -169,8 +183,8 @@ const handleSuccessModalClose = () => {
                 placeholderTextColor="#999"
                 textAlign="right"
               />
-            </View>
-          </View> */}
+            </View> */}
+          </View>
 
           {/* יעדי תרומה */}
           <View style={styles.card}>

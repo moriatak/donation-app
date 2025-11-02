@@ -35,7 +35,8 @@ export default function ProcessingScreen() {
 
   const processPayment = async () => {
     try {
-      if (!sensitiveCardData) {
+      // בדיקה אם זה מעבר למכשיר סליקה, לא צריך פרטי אשראי ואם זה הקלדה ידנית צריך פרטי אשראי
+      if (params.paymentMethod !== 'credit-tap' && !sensitiveCardData) {
         throw new Error('פרטי כרטיס האשראי חסרים');
       }
 
@@ -50,9 +51,10 @@ export default function ProcessingScreen() {
           donorPhone: params.donorPhone as string,
           targetId: params.targetId as string,
           targetName: params.targetName as string,
-          paymentMethod: params.paymentMethod as string,
-          transactionId: transactionId as string,
-          cardData: sensitiveCardData
+          paymentMethod: 'credit_card',
+          transactionId: (params.paymentMethod === 'credit-tap' && !!config.settings.terminalName) 
+                ? config.settings.terminalName : transactionId as string,
+          cardData: sensitiveCardData ? sensitiveCardData : null
           
         }
       );

@@ -1,9 +1,8 @@
 import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
-const GABBAI_PHONE = "0585727870";
+import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { DonorAPI } from '../services/api'; // ייבוא ה-API
 
 export default function GabbaiPhoneVerification() {
   const router = useRouter();
@@ -12,8 +11,9 @@ export default function GabbaiPhoneVerification() {
   
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); 
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!phone || phone.length !== 10) {
       setError('יש להזין מספר טלפון תקין (10 ספרות)');
       return;
@@ -24,16 +24,33 @@ export default function GabbaiPhoneVerification() {
       return;
     }
     
-    if (phone === GABBAI_PHONE) {
-      router.push({
-        pathname: '/gabbai-code-verification',
-        params: { ...params, phone }
-      });
-    } else {
-      setError('אין לך הרשאה לגשת למערכת');
+    setLoading(true);
+    try {
+      // שימוש בפונקציה עם הפרמטר isGabbayEntry מוגדר כ-true
+      const result = await DonorAPI.sendVerificationCode(config, phone, true);
+      
+      if (result.success && result.sessionId) {
+        // קוד נשלח בהצלחה - מעבר למסך אימות קוד לגבאי
+        router.push({
+          pathname: '/gabbai-code-verification',
+          params: { 
+            ...params, 
+            phone,
+            sessionId: result.sessionId 
+          }
+        });
+      } else {
+        // אם יש הודעת שגיאה מהשרת, נציג אותה
+        setError(result.message || 'אין לך הרשאה לגשת למערכת');
+      }
+    } catch (error) {
+      Alert.alert('שגיאה', 'אירעה שגיאה בבדיקת המספר או בשליחת הקוד');
+      setError('אירעה שגיאה בתקשורת עם השרת');
+    } finally {
+      setLoading(false);
     }
   };
-
+  console.log('config', config)
   return (
     <View style={[styles.container, { backgroundColor: config.colors.background }]}>
       <View style={styles.header}>
@@ -75,14 +92,21 @@ export default function GabbaiPhoneVerification() {
             textAlign="right"
             maxLength={10}
           />
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
         
         <TouchableOpacity
-          style={[styles.continueButton, { backgroundColor: config.colors.primary }]}
+          style={[
+            styles.continueButton, 
+            { backgroundColor: config.colors.primary },
+            loading && styles.disabled // הוספת סטייל נכה כשטוען
+          ]}
           onPress={handleContinue}
+          disabled={loading}
         >
-          <Text style={styles.continueText}>המשך לאימות</Text>
+          <Text style={styles.continueText}>
+            {loading ? 'מתחבר...' : 'המשך לאימות'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -160,5 +184,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
+  disabled: { opacity: 0.5 }, // הוספת סטייל לכפתור מושבת
   continueText: { color: 'white', fontSize: 22, fontWeight: 'bold' },
 });

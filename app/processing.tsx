@@ -40,6 +40,7 @@ export default function ProcessingScreen() {
       }
 
       const paymentResponse = await TaktzivitAPI.processPayment(
+        config,
         { 
           amount: params.amount as string, 
           phone: params.donorPhone as string,

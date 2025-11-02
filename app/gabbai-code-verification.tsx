@@ -1,4 +1,5 @@
 import { useConfig } from '@/context/configContext';
+import { DonorAPI } from '@/services/api';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -9,6 +10,9 @@ export default function GabbaiCodeVerification() {
   const { config } = useConfig();
   
   const phone = params.phone as string;
+  const sessionId = params.sessionId as string;
+  
+  const [attempts, setAttempts] = useState(0);
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(60);
@@ -57,19 +61,37 @@ export default function GabbaiCodeVerification() {
 
   const verifyCode = async (codeString: string) => {
     setLoading(true);
-    setError('');
-    
     try {
-      // בדיקה לקוד 123456
-      if (codeString === '123456') {
+      const result = await DonorAPI.verifyCode(config, phone, codeString, sessionId, true);
+      if (result.success && result.donorData) {
+        // קוד נכון - מעבר למסך הגדרות האפליקצייה
         router.push('/admin-settings');
       } else {
-        setError('קוד שגוי, אנא נסה שנית');
+        // קוד שגוי
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
         setCode(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
+        
+        if (newAttempts >= 3) {
+          Alert.alert(
+            'ניסיונות אזלו',
+            'הגעת למספר הניסיונות המקסימלי. אינך רשאי להכנס כרגע  .',
+            [
+              {
+                text: 'אישור',
+                onPress: () => router.replace({
+                  pathname: '/Home',
+                })
+              }
+            ]
+          );
+        } else {
+          Alert.alert('קוד שגוי',  `נותרו ${3 - newAttempts} ניסיונות`);
+        }
       }
     } catch (error) {
-      setError('אירעה שגיאה באימות הקוד');
+      Alert.alert('שגיאה', 'אירעה שגיאה באימות הקוד');
     } finally {
       setLoading(false);
     }
@@ -146,9 +168,6 @@ export default function GabbaiCodeVerification() {
           )}
         </View>
         
-        <Text style={styles.hint}>
-          💡 הקוד הנכון הוא 123456
-        </Text>
       </View>
     </View>
   );

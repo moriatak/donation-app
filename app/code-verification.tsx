@@ -61,7 +61,7 @@ export default function CodeVerificationScreen() {
   const verifyCode = async (codeString: string) => {
     setLoading(true);
     try {
-      const result = await DonorAPI.verifyCode(phone, codeString, sessionId);
+      const result = await DonorAPI.verifyCode(config, phone, codeString, sessionId);
       if (result.success && result.donorData) {
         // קוד נכון - מעבר למסך פרטים עם הנתונים
         router.replace({
@@ -113,7 +113,7 @@ export default function CodeVerificationScreen() {
     setCanResend(false);
     setCountdown(60);
     try {
-      const result = await DonorAPI.sendVerificationCode(phone);
+      const result = await DonorAPI.sendVerificationCode(config, phone);
       
       if (result.success && result.sessionId) {
         // עדכון sessionId החדש

@@ -58,7 +58,7 @@ export default function BitPaymentScreen() {
 
   const processPayment = async () => {
     try {
-      const paymentResponse = await TaktzivitAPI.processPayment({
+      const paymentResponse = await TaktzivitAPI.processPayment(config,{
         amount: params.amount as string,
         phone: params.donorPhone as string,
         donorFirstName: params.donorFirstName as string,

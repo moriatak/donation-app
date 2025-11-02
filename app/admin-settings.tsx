@@ -133,7 +133,7 @@ const handleSuccessModalClose = () => {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           
           {/* פרטי בית כנסת */}
-          <View style={styles.card}>
+          {/* <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardIcon}>🕍</Text>
               <Text style={[styles.cardTitle, { color: config.colors.primary }]}>
@@ -170,7 +170,7 @@ const handleSuccessModalClose = () => {
                 textAlign="right"
               />
             </View>
-          </View>
+          </View> */}
 
           {/* יעדי תרומה */}
           <View style={styles.card}>

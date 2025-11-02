@@ -23,7 +23,7 @@ export default function PhoneVerificationScreen() {
     
     setLoading(true);
     try {
-      const result = await DonorAPI.sendVerificationCode(phone);
+      const result = await DonorAPI.sendVerificationCode(config, phone);
 
       if (result.success && result.sessionId) {
         // תורם קיים וקוד נשלח בהצלחה - מעבר למסך אימות

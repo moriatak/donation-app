@@ -88,7 +88,7 @@ export default function SuccessScreen() {
           </Text>
         </View>
         
-        <View style={styles.receiptBox}>
+        {/* <View style={styles.receiptBox}>
           <Text style={[styles.receiptTitle, { color: config.colors.primary }]}>
             שלח קבלה
           </Text>
@@ -111,7 +111,7 @@ export default function SuccessScreen() {
               <Text style={styles.receiptButtonText}>אימייל</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
         
         <TouchableOpacity
           style={[styles.newDonationButton, { backgroundColor: config.colors.primary }]}

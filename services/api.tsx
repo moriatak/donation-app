@@ -1,5 +1,4 @@
-import { useConfig } from '@/context/configContext';
-const { config } = useConfig();
+import { SynagogueConfig } from "@/config/mockConfig";
 
 const API_KEY = "a12y45bC4@1&&lo9OpC";
 const DONATION_API_ENDPOINT = "https://tak.co.il/donation_app/index.php";
@@ -53,6 +52,7 @@ export const TaktzivitAPI = {
   },
   
   processPayment: async (
+    config: SynagogueConfig,
     paymentDataToPAy: { 
       amount: string | number; 
       phone: string;
@@ -245,7 +245,7 @@ export const DonorAPI = {
               compId: responseData.compId,
               logo: responseData.logo,
               donationAppName: responseData.donationAppName,
-              bitOption: responseData.bitOption
+              bitOption: responseData.bitOption,
             }
           };
         } else {
@@ -270,18 +270,23 @@ export const DonorAPI = {
   },
 
   // שליחת קוד אימות
-  sendVerificationCode: async (phone: string): Promise<{ 
+  sendVerificationCode: async (config: SynagogueConfig, phone: string, isGabbayEntry: boolean = false): Promise<{ 
     success: boolean; 
     sessionId?: string;
     message?: string;
   }> => {
     try {
       const parameters = new FormData();
-      parameters.append('user_and_phone', 'true');
+      
       parameters.append('apiKey', API_KEY);
       parameters.append('phone', phone);
       parameters.append('companyId', config.settings.companyId);
-
+      parameters.append('compToken', config.settings.copmainingToken);
+      if(isGabbayEntry){
+        parameters.append('gabbay_entry_by_phone', 'true');
+      } else {
+        parameters.append('user_and_phone', 'true');
+      }
       // הדפסת הבקשה ללוג לפני שליחה
       console.log('======== LOGIN REQUEST ========');
       console.log('URL: ',DONATION_API_ENDPOINT);
@@ -331,9 +336,11 @@ export const DonorAPI = {
   
   // אימות קוד
   verifyCode: async (
+    config: SynagogueConfig,
     phone: string, 
     code: string, 
-    sessionId: string
+    sessionId: string,
+    isGabbayEntry: boolean = false
   ): Promise<{
     success: boolean;
     donorData?: {
@@ -352,7 +359,9 @@ export const DonorAPI = {
       parameters.append('phone', phone);
       parameters.append('sessionId', sessionId);
       parameters.append('companyId', config.settings.companyId);
-
+      if(isGabbayEntry){
+        parameters.append('is_gabbay_code', 'true');
+      }
         // הדפסת הבקשה ללוג לפני שליחה
         console.log('======== LOGIN REQUEST ========');
         console.log('URL: ',DONATION_API_ENDPOINT);

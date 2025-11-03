@@ -2,14 +2,14 @@ import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ConfirmationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { config } = useConfig();
   
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(true);
   const [loading, setLoading] = useState(false);
   
   const target = {
@@ -124,7 +124,7 @@ export default function ConfirmationScreen() {
             </View>
           </View>
           
-          <View style={styles.termsBox}>
+          {/* <View style={styles.termsBox}>
             <View style={styles.termsRow}>
               <Switch
                 value={agreedToTerms}
@@ -136,7 +136,7 @@ export default function ConfirmationScreen() {
                 אני מאשר/ת את <Text style={[styles.termsBold, { color: config.colors.primary }]}>פרטי התרומה</Text>
               </Text>
             </View>
-          </View>
+          </View> */}
           
           <View style={styles.actionButtons}>
             <TouchableOpacity

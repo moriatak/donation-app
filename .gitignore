@@ -9,6 +9,11 @@ dist/
 web-build/
 expo-env.d.ts
 
+# Environment and personal files
+.zshrc
+*.env
+.env.*
+
 # Native
 .kotlin/
 *.orig.*

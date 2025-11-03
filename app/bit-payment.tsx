@@ -68,7 +68,6 @@ export default function BitPaymentScreen() {
         targetId: params.targetId as string,
         targetName: params.targetName as string,
         paymentMethod: params.paymentMethod as string,
-        transactionId: transactionId as string
       });
 
       if (paymentResponse.success && paymentResponse.paymentUrl) {

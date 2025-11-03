@@ -41,8 +41,8 @@ export const MOCK_QR_CONFIG: SynagogueConfig = {
     { id: "renovation", name: "שיפוץ בית הכנסת", icon: "🔨" },
     { id: "poor", name: "קופת צדקה", icon: "🤲" }
   ],
-  quick_amounts: [],
-  // quick_amounts: [18, 36, 54, 100, 180, 360, 500],
+  // quick_amounts: [],
+  quick_amounts: [18, 36, 54, 100, 180, 360, 500],
   colors: {
     primary: "#0D3B66",
     secondary: "#D4AF37",

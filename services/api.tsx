@@ -65,7 +65,6 @@ export const TaktzivitAPI = {
       targetId: string;
       targetName: string;
       paymentMethod: string;
-      transactionId: string;
       cardData?: {
         cardNumber: string;
         expiry: string;
@@ -79,7 +78,7 @@ export const TaktzivitAPI = {
       const requestBody = {
         companyId: config.settings.companyId,
         token: config.settings.copmainingToken,
-        parentName: paymentDataToPAy.transactionId,
+        parentName: config.settings.terminalName,
         copmainingToken: config.settings.copmainingId, // Campaign ID
         source: 'android', // חשוב! חייב להיות android
         
@@ -97,7 +96,8 @@ export const TaktzivitAPI = {
         transaction: {
           items: [
             { 
-              itemId: '3', // גדרה
+              itemId: '192', // תקציבית
+              // itemId: '3', // גדרה
               // itemId: '305', // מעמק
               // itemId: String(paymentData.targetId), 
               name: paymentDataToPAy.targetName, 

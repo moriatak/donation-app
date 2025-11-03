@@ -52,8 +52,6 @@ export default function ProcessingScreen() {
           targetId: params.targetId as string,
           targetName: params.targetName as string,
           paymentMethod: 'credit_card',
-          transactionId: (params.paymentMethod === 'credit-tap' && !!config.settings.terminalName) 
-                ? config.settings.terminalName : transactionId as string,
           cardData: sensitiveCardData ? sensitiveCardData : null
           
         }

@@ -1,6 +1,117 @@
 אפליקציית תרומות כתובה בreact-native
 
 
+# אפליקציית תרומות
+
+## דרישות מקדימות
+- Node.js (גרסה 16 ומעלה)
+- npm 
+- Expo CLI
+- סביבת פיתוח לאפליקציות מובייל (Android Studio ל-Android או Xcode ל-iOS)
+
+## התקנה
+
+### שלב 1: שכפול (Clone) של הפרויקט
+```bash
+git clone https://github.com/moriatak/donation-app.git
+cd donation-app
+```
+
+### שלב 2: התקנת התלויות (Dependencies)
+```bash
+npm install
+
+### שלב 3: הגדרות סביבה
+יש לוודא שכל קבצי התצורה מוגדרים כראוי לפני הפעלת האפליקציה.
+
+## הרצת האפליקציה
+
+### פיתוח מקומי
+```bash
+# הפעלת שרת הפיתוח של Expo
+ npx expo start 
+```
+
+לאחר הפעלת השרת, תוכל/י לבחור להריץ את האפליקציה ב:
+- אמולטור Android
+- סימולטור iOS
+- מכשיר פיזי באמצעות אפליקציית Expo Go
+
+#### בדיקת תאימות
+לאחר הגדרת כל קבצי התצורה, הריצו את הפקודה הבאה לבדיקת תאימות:
+```bash
+npx expo doctor
+```
+פקודה זו תאתר בעיות נפוצות בהגדרות האפליקציה שלכם.
+
+### בניית (Build) האפליקציה בפעם הראשונה
+```bash
+npm install -g eas-cli
+```
+```bash
+eas login
+```
+שם משתמש: ayalon
+סיסמה: ayalon123
+```bash
+eas build:configure
+npx expo install expo-dev-client
+```
+
+#### עבור Android
+```bash
+eas build -p android
+```
+
+#### עבור iOS
+```bash
+eas build -p ios
+```
+
+## מבנה הפרויקט
+- `app/` - קבצי המסכים והרכיבים העיקריים של האפליקציה
+  - `_layout.tsx` - הגדרות ה-layout הכלליות
+  - `index.tsx` - מסך הבית
+  - `bit-payment.tsx` - מסך עיבוד תשלומים
+  - `confirmation.tsx` - מסך אישור התרומה
+  - `processing.tsx` - מסך עיבוד התהליך
+- `services/` - שירותים ו-API
+  - `api.tsx` - פונקציות לתקשורת עם השרת
+- `config/` - קבצי תצורה
+  - `mockConfig.tsx` - תצורה לסביבת בדיקות
+
+## גיבוי והעלאה ל-Git
+בפרויקט זה אנחנו מעלים לגיט את כל קבצי המקור, קבצי תצורה חיוניים וקבצי התיעוד.
+
+קבצים שאינם מועלים (מוגדרים ב-gitignore):
+- תיקיית `node_modules`
+- קבצי בנייה (.apk, .aab, .ipa)
+- קבצי סביבה אישיים (.env)
+- קבצי מערכת (.DS_Store)
+
+## המרת קובץ aab לקובץ apk
+הורדת Bundletool
+גש לדף ההורדות הרשמי של Bundletool בגיטהאב: https://github.com/google/bundletool/releases
+בדף זה תראה רשימה של גרסאות. חפש את הגרסה האחרונה (מסומנת כ-"Latest").
+תחת הגרסה האחרונה, יש אזור שנקרא "Assets". לחץ על הקובץ שנקרא בדרך כלל משהו כמו bundletool-all-1.18.2.jar (המספר עשוי להשתנות בהתאם לגרסה העדכנית).
+הקובץ יתחיל להוריד למחשב שלך. שים לב היכן הוא נשמר (בדרך כלל בתיקיית ההורדות).
+מומלץ לשמור את הקובץ במיקום שתוכל לזכור ולגשת אליו בקלות, למשל צור תיקייה חדשה בשם "bundletool" על שולחן העבודה או במיקום נוח אחר, והעבר לשם את הקובץ.
+צעד 2: הכנת הקבצים והתיקיות
+ודא שקובץ ה-AAB שאתה רוצה להמיר נמצא במיקום נגיש
+ודא שקובץ ה-Bundletool שהורדת (הקובץ .jar) נמצא גם הוא במיקום נגיש
+רצוי ליצור תיקייה מיוחדת עבור הפלט (APK שייווצר)
+צעד 3: פתיחת חלון פקודה (Command Prompt / Terminal)
+פתחו את חלון הפקודה במחשב
+נווטו לתיקייה בה שמרתם את Bundletool
+צעד 3: הפעלת פקודת ההמרה
+
+
+3. הפעל את הפקודה הבאה להמרת קובץ ה-AAB ל-APK: 
+java -jar bundletool-all-[גרסה].jar build-apks --bundle=[נתיב_לקובץ_AAB]/app.aab --output=[נתיב_יעד]/app.apks --mode=universal --ks=[נתיב_לקובץ_keystore] --ks-pass=pass:[סיסמה] --ks-key-alias=[שם_המפתח] --key-pass=pass:[סיסמת_המפתח]
+
+לדוגמה:
+java -jar bundletool-all-1.18.2.jar build-apks --bundle=application-8a0119e8-2afe-40b2-b4d1-57be0a7875ac.aab --output=donation-app/tryapk/app.apks --mode=universal --ks=/Users/elireu/Documents/projects/donation-app/android/app/debug.keystore --ks-pass=pass:android --ks-key-alias=androiddebugkey --key-pass=pass:android
+
 
 # Welcome to your Expo app 👋
 

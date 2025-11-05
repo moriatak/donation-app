@@ -1,3 +1,4 @@
+import { HDate } from '@hebcal/core';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SynagogueConfig } from '../config/mockConfig';
@@ -7,15 +8,24 @@ interface HebrewDateProps {
 }
 
 export default function HebrewDate({ config }: HebrewDateProps) {
-  const [time, setTime] = useState(new Date());
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
   
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
+    const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
   
-  const hebrewDate = "כ״ט אלול תשפ״ה";
-  const timeString = time.toLocaleTimeString('he-IL', { 
+  // המרת התאריך הנוכחי לתאריך עברי
+  const getHebrewDate = (date: Date): string => {
+    // יצירת אובייקט תאריך עברי מתאריך גרגוריאני
+    const hDate = new HDate(date);
+    
+    // השגת התאריך העברי בפורמט גמטרייה (אותיות עבריות)
+    return hDate.renderGematriya();
+  };
+  
+  const hebrewDate = getHebrewDate(currentDateTime);
+  const timeString = currentDateTime.toLocaleTimeString('he-IL', { 
     hour: '2-digit', 
     minute: '2-digit' 
   });

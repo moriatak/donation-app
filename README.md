@@ -20,6 +20,7 @@ cd donation-app
 ### שלב 2: התקנת התלויות (Dependencies)
 ```bash
 npm install
+```
 
 ### שלב 3: הגדרות סביבה
 יש לוודא שכל קבצי התצורה מוגדרים כראוי לפני הפעלת האפליקציה.
@@ -89,29 +90,54 @@ eas build -p ios
 - קבצי סביבה אישיים (.env)
 - קבצי מערכת (.DS_Store)
 
-## המרת קובץ aab לקובץ apk
-הורדת Bundletool
-גש לדף ההורדות הרשמי של Bundletool בגיטהאב: https://github.com/google/bundletool/releases
-בדף זה תראה רשימה של גרסאות. חפש את הגרסה האחרונה (מסומנת כ-"Latest").
-תחת הגרסה האחרונה, יש אזור שנקרא "Assets". לחץ על הקובץ שנקרא בדרך כלל משהו כמו bundletool-all-1.18.2.jar (המספר עשוי להשתנות בהתאם לגרסה העדכנית).
-הקובץ יתחיל להוריד למחשב שלך. שים לב היכן הוא נשמר (בדרך כלל בתיקיית ההורדות).
-מומלץ לשמור את הקובץ במיקום שתוכל לזכור ולגשת אליו בקלות, למשל צור תיקייה חדשה בשם "bundletool" על שולחן העבודה או במיקום נוח אחר, והעבר לשם את הקובץ.
-צעד 2: הכנת הקבצים והתיקיות
-ודא שקובץ ה-AAB שאתה רוצה להמיר נמצא במיקום נגיש
-ודא שקובץ ה-Bundletool שהורדת (הקובץ .jar) נמצא גם הוא במיקום נגיש
-רצוי ליצור תיקייה מיוחדת עבור הפלט (APK שייווצר)
-צעד 3: פתיחת חלון פקודה (Command Prompt / Terminal)
-פתחו את חלון הפקודה במחשב
-נווטו לתיקייה בה שמרתם את Bundletool
-צעד 3: הפעלת פקודת ההמרה
+## המרת קובץ AAB לקובץ APK
 
+מדריך פשוט להמרת קבצי Android App Bundle (AAB) לקבצי Android Application Package (APK) באמצעות Bundletool.
 
-3. הפעל את הפקודה הבאה להמרת קובץ ה-AAB ל-APK: 
+### צעד 1: הורדת Bundletool
+
+1. גש לדף ההורדות הרשמי של Bundletool בגיטהאב: https://github.com/google/bundletool/releases
+2. בדף זה תראה רשימה של גרסאות. חפש את הגרסה האחרונה (מסומנת כ-"Latest").
+3. תחת הגרסה האחרונה, יש אזור שנקרא "Assets". לחץ על הקובץ שנקרא בדרך כלל משהו כמו `bundletool-all-1.18.2.jar` (המספר עשוי להשתנות בהתאם לגרסה העדכנית).
+4. הקובץ יתחיל להוריד למחשב שלך. שים לב היכן הוא נשמר (בדרך כלל בתיקיית ההורדות).
+5. מומלץ לשמור את הקובץ במיקום שתוכל לזכור ולגשת אליו בקלות, למשל צור תיקייה חדשה בשם "bundletool" על שולחן העבודה או במיקום נוח אחר, והעבר לשם את הקובץ.
+
+### צעד 2: הכנת הקבצים והתיקיות
+
+1. ודא שקובץ ה-AAB שאתה רוצה להמיר נמצא במיקום נגיש
+2. ודא שקובץ ה-Bundletool שהורדת (הקובץ .jar) נמצא גם הוא במיקום נגיש
+3. רצוי ליצור תיקייה מיוחדת עבור הפלט (APK שייווצר)
+
+### צעד 3: פתיחת חלון פקודה (Command Prompt / Terminal)
+
+1. פתח את חלון הפקודה במחשב
+2. נווט לתיקייה בה שמרת את Bundletool
+
+### צעד 4: הפעלת פקודת ההמרה
+
+הפעל את הפקודה הבאה להמרת קובץ ה-AAB ל-APK:
+
+```bash
 java -jar bundletool-all-[גרסה].jar build-apks --bundle=[נתיב_לקובץ_AAB]/app.aab --output=[נתיב_יעד]/app.apks --mode=universal --ks=[נתיב_לקובץ_keystore] --ks-pass=pass:[סיסמה] --ks-key-alias=[שם_המפתח] --key-pass=pass:[סיסמת_המפתח]
+```
 
-לדוגמה:
+### דוגמה לפקודה:
+
+```bash
 java -jar bundletool-all-1.18.2.jar build-apks --bundle=application-8a0119e8-2afe-40b2-b4d1-57be0a7875ac.aab --output=donation-app/tryapk/app.apks --mode=universal --ks=/Users/elireu/Documents/projects/donation-app/android/app/debug.keystore --ks-pass=pass:android --ks-key-alias=androiddebugkey --key-pass=pass:android
+```
 
+## צעד 5: חילוץ קובץ APK
+
+לאחר הרצת הפקודה, ייווצר קובץ `.apks`. זהו למעשה קובץ ZIP שמכיל את ה-APK. ניתן לשנות את הסיומת ל-`.zip` ולחלץ את קובץ ה-APK מתוכו, או להשתמש בפקודה הבאה:
+
+```bash
+java -jar bundletool-all-[גרסה].jar extract-apks --apks=[נתיב_לקובץ]/app.apks --output-dir=[תיקיית_יעד]
+```
+
+## הערות
+
+- אם אתה משתמש במפתח דיבאג (debug keystore) של אנדרואיד, סיסמת ברירת המחדל היא בדרך כלל `android` והאליאס הוא `androiddebugkey`.
 
 # Welcome to your Expo app 👋
 

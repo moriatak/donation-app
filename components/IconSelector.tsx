@@ -1,19 +1,6 @@
+import { DONATION_ICONS } from '@/config/donationIcons';
 import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-
-// מאגר אייקונים לתרומות
-const donationIcons = [
-  // בתי כנסת ומוסדות דת
-  '🏛️', '⛪', '🕌', '🕍', '🕋', '📿', '🙏',
-  // מבני ציבור וקהילה
-  '🏘️', '🏠', '🏡', '🏢', '🏫', '🏥', '🏤', '📚', '🏆',
-  // חסד וצדקה
-  '🍞', '💰', '💵', '💸', '👨‍👩‍👧‍👦', '👨‍👧‍👦', '👪','📜',
-  // חגים ומועדים
-  '✡️', '🕎', '🎊', '🎉', '🎈', '🕯️', '📯', '📅',
-  // אחרים
-  '❤️', '🤲', '🌱', '🌳', '🌿', '🔨', '🧰', '👷‍♂️', '🧠', '📖', '✒️'
-];
 
 interface IconSelectorProps {
   visible: boolean;
@@ -35,7 +22,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ visible, onSelect, onClose 
             <View style={styles.iconSelectorContainer}>
               <Text style={styles.iconSelectorTitle}>בחר אייקון</Text>
               <View style={styles.iconsGrid}>
-                {donationIcons.map((icon, index) => (
+                {DONATION_ICONS.map((icon, index) => (
                   <TouchableOpacity
                     key={index}
                     style={styles.iconItem}
@@ -112,4 +99,4 @@ const styles = StyleSheet.create({
 });
 
 export default IconSelector;
-export { donationIcons };
+export { DONATION_ICONS };

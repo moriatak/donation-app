@@ -2,6 +2,7 @@ import { SynagogueConfig } from "@/config/mockConfig";
 
 const API_KEY = "a12y45bC4@1&&lo9OpC";
 const DONATION_API_ENDPOINT = "https://tak.co.il/donation_app/index.php";
+const GETSETTINGS_API_ENDPOINT = "https://tak.co.il/campaignServer/api/getSettings";
 
 export interface IntentResponse {
   success: boolean;
@@ -40,6 +41,7 @@ export interface SettingsResponse {
     bitOption: boolean;
     paxShopOpt: boolean;
     terminalName: string
+    items: Array<object>;
   };
   message?: string;
 }
@@ -76,9 +78,12 @@ export const TaktzivitAPI = {
     try {
       // יצירת אובייקט הבקשה שיישלח
       const requestBody = {
+        token: config.settings.tokenApi,
+        apiToken: config.settings.tokenApi,
         companyId: config.settings.companyId,
-        token: config.settings.copmainingToken,
+        // token: config.settings.copmainingToken,
         parentName: config.settings.terminalName,
+        parentId: config.settings.copmainingToken,
         copmainingToken: config.settings.copmainingId, // Campaign ID
         source: 'android', // חשוב! חייב להיות android
         
@@ -212,21 +217,23 @@ export const DonorAPI = {
   getSettings: async (apiToken: string): Promise<SettingsResponse> => {
     try {
       // apiToken = 'zr_54321zyxwv'
-      const parameters = new FormData();
-      parameters.append('get_setting', 'true');
-      parameters.append('apiKey', API_KEY);
-      parameters.append('api_token', apiToken);
 
       // הדפסת הבקשה ללוג לפני שליחה
       console.log('======== GET SETTINGS REQUEST ========');
-      console.log('URL:', DONATION_API_ENDPOINT);
+      console.log('URL:', GETSETTINGS_API_ENDPOINT);
       console.log('METHOD: POST');
-      console.log('PARAMS: { get_setting: true, apiKey: ****, api_token:', apiToken, '}');
+      console.log('body: { apiKey: ****, api_token:', apiToken, '}');
       console.log('======================================');
-
-      const response = await fetch(DONATION_API_ENDPOINT, {
+      const data = {
+        apiKey: API_KEY,
+        api_token: apiToken
+      }
+      const response = await fetch(GETSETTINGS_API_ENDPOINT, {
         method: 'POST',
-        body: parameters,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data),
       });
 
       if (response.ok) {
@@ -238,18 +245,19 @@ export const DonorAPI = {
         console.log('=======================================');
 
         // השרת מחזיר ישירות את האובייקט עם הנתונים
-        if (responseData.companyId && responseData.compToken) {
+        if (responseData.IndexData.IdCompany && responseData.IndexData.TokenUrl) {
           return {
             success: true,
             settings: {
-              companyId: responseData.companyId,
-              compToken: responseData.compToken,
-              compId: responseData.compId,
-              logo: responseData.logo,
-              donationAppName: responseData.donationAppName,
-              bitOption: responseData.bitOption,
-              paxShopOpt: responseData.paxShopOpt,
-              terminalName: responseData.terminalName
+              companyId: responseData.IndexData.IdCompany,
+              compToken: responseData.IndexData.TokenUrl,
+              compId: responseData.IndexData.Id,
+              logo: responseData.DisplayData.LogoUrl,
+              donationAppName: responseData.DisplayData.Name,
+              bitOption: true,
+              paxShopOpt: !!responseData.IndexData.nameTerminal,
+              terminalName: responseData.IndexData.nameTerminal,
+              items: responseData.PageItems
             }
           };
         } else {

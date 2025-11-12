@@ -10,13 +10,13 @@ export default function TargetSelectionScreen() {
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
 
   const handleTargetPress = (target: any) => {
-    setSelectedTarget(target.id);
+    setSelectedTarget(target.lastId);
     // המתנה קצרה כדי להראות את האנימציה
     setTimeout(() => {
       router.push({
         pathname: '/amount',
         params: { 
-          targetId: target.id,
+          targetId: target.lastId,
           targetName: target.name,
           targetIcon: target.icon
         }
@@ -46,11 +46,11 @@ export default function TargetSelectionScreen() {
           <View style={styles.grid}>
             {config.donation_targets.map(target => (
               <TouchableOpacity
-                key={target.id}
+                key={target.lastId}
                 style={[
                   styles.targetButton,
                   { borderColor: config.colors.secondary },
-                  selectedTarget === target.id && {
+                  selectedTarget === target.lastId && {
                     backgroundColor: config.colors.primary,
                     borderColor: config.colors.primary,
                   }
@@ -61,7 +61,7 @@ export default function TargetSelectionScreen() {
                 <Text style={styles.targetIcon}>{target.icon}</Text>
                 <Text style={[
                   styles.targetName,
-                  { color: selectedTarget === target.id ? 'white' : config.colors.primary }
+                  { color: selectedTarget === target.lastId ? 'white' : config.colors.primary }
                 ]}>
                   {target.name}
                 </Text>

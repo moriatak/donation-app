@@ -50,7 +50,7 @@ export default function GabbaiPhoneVerification() {
       setLoading(false);
     }
   };
-  console.log('config', config)
+
   return (
     <View style={[styles.container, { backgroundColor: config.colors.background }]}>
       <View style={styles.header}>

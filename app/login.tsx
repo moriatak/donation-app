@@ -1,3 +1,4 @@
+import { DONATION_ICONS } from '@/config/donationIcons';
 import { useConfig } from '@/context/configContext';
 import { DonorAPI } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -35,6 +36,7 @@ export default function LoginScreen() {
   const saveToken = async (tokenValue: string) => {
     try {
       await AsyncStorage.setItem('token', tokenValue);
+      config.settings.tokenApi = tokenValue;
     } catch (error) {
       console.log('Failed to save token', error);
     }
@@ -142,6 +144,22 @@ export default function LoginScreen() {
       if (settings.logo) {
         config.synagogue.logo_url = settings.logo;
         console.log('Updated synagogue logo_url to:', settings.logo);
+      }
+      console.log('settings.items:', settings.items);
+
+      if(settings.items && settings.items.length > 0) {
+        config.donation_targets = settings.items.map((item: any, index: number) => {
+          // לוקחים אייקון מהמערך באופן מחזורי לפי האינדקס של הפריט במערך
+          const defaultIcon = DONATION_ICONS[index % DONATION_ICONS.length];
+          
+          return {
+            lastId: item.Lst_Id.toString(),
+            itemId: item.itemId,
+            name: item.Title,
+            icon: item.IconLink || defaultIcon // משתמש באייקון מהמערך אם אין אייקון מוגדר
+          };
+        });
+        console.log('Updated settings donation_targets to:', config.donation_targets);
 
       }
       if (settings.bitOption && settings.bitOption == true) {
@@ -154,10 +172,10 @@ export default function LoginScreen() {
 
       if (settings.paxShopOpt && settings.paxShopOpt == true) {
         config.settings.pax_shop_opt = true;
-        console.log('Updated settings bitOption to:', true);
+        console.log('Updated settings paxShopOpt to:', true);
       } else {
         config.settings.pax_shop_opt = false;
-        console.log('Updated settings bitOption to:', false);
+        console.log('Updated settings paxShopOpt to:', false);
       }
 
       if (settings.showNameTerminal && settings.showNameTerminal == true) {
@@ -175,7 +193,7 @@ export default function LoginScreen() {
       }
       if (settings.compId) {
         config.settings.copmainingId = settings.compId;
-        console.log('Updated synagogue copmainingId to:', settings.copmainingId);
+        console.log('Updated synagogue copmainingId to:', settings.compId);
 
       }
       if (settings.compToken) {
@@ -207,12 +225,12 @@ export default function LoginScreen() {
           </View>
           <Text style={styles.successTitle}>התחברות הצליחה!</Text>
           <Text style={styles.successMessage}>ברוך הבא למערכת</Text>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.successButton, { backgroundColor: config.colors.primary }]}
             onPress={onContinue}
           >
             <Text style={styles.successButtonText}>המשך</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
     </Modal>

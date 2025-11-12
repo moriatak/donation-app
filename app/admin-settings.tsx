@@ -41,7 +41,8 @@ export default function AdminSettingsScreen() {
 
   const handleAddTarget = () => {
     const newTarget: DonationTarget = {
-      id: `target_${Date.now()}`,
+      lastId: `target_${Date.now()}`,
+      itemId: '',
       name: '',
       icon: '💰'
     };
@@ -200,7 +201,7 @@ const handleSuccessModalClose = () => {
             </Text>
 
             {editConfig.donation_targets.map((target, index) => (
-              <View key={target.id} style={styles.targetRow}>
+              <View key={target.lastId} style={styles.targetRow}>
                 <View style={styles.targetInputs}>
                   <TouchableOpacity
                     style={styles.iconButton}

@@ -17,6 +17,7 @@ export default function TargetSelectionScreen() {
         pathname: '/amount',
         params: { 
           targetId: target.lastId,
+          targetItemId: target.itemId,
           targetName: target.name,
           targetIcon: target.icon
         }

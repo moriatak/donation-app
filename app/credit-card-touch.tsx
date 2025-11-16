@@ -57,7 +57,7 @@ export default function CreditCardTouchScreen() {
           donorLastName: params.donorLastName as string,
           donorEmail: params.donorEmail as string || '',  // מטפל במקרה שהשדה לא קיים
           donorPhone: params.donorPhone as string,
-          targetId: params.targetId as string,
+          targetItemId: params.targetItemId as string,
           targetName: params.targetName as string,
           paymentMethod: params.paymentMethod as string,
           nexAction: params.nextAction as NextActionApp,

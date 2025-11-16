@@ -66,7 +66,7 @@ export default function BitPaymentScreen() {
         donorLastName: params.donorLastName as string,
         donorEmail: (params.donorEmail as string) || '',
         donorPhone: params.donorPhone as string,
-        targetId: params.targetId as string,
+        targetItemId: params.targetItemId as string,
         targetName: params.targetName as string,
         paymentMethod: params.paymentMethod as string,
         nexAction: params.nextAction as NextActionApp

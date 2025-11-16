@@ -26,8 +26,10 @@ export const ConfigProvider: React.FC<{children: React.ReactNode}> = ({ children
   const loadConfig = async () => {
     try {
       const storedConfig = await AsyncStorage.getItem('synagogue_config');
-      if (storedConfig) {
+      if (storedConfig && Object.keys(storedConfig).length !== 0) {
         setConfig(JSON.parse(storedConfig));
+      } else {
+        resetConfig();
       }
     } catch (error) {
       console.log('Error loading config:', error);

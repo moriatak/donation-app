@@ -1,4 +1,4 @@
-import { SynagogueConfig } from "@/config/mockConfig";
+import { NextActionApp, SynagogueConfig, paymentOption } from "@/config/mockConfig";
 
 const API_KEY = "a12y45bC4@1&&lo9OpC";
 const DONATION_API_ENDPOINT = "https://tak.co.il/donation_app/index.php";
@@ -38,10 +38,9 @@ export interface SettingsResponse {
     compId: string;
     logo: string;
     donationAppName: string;
-    bitOption: boolean;
-    paxShopOpt: boolean;
     terminalName: string
     items: Array<object>;
+    paymentOptions: Array<paymentOption>
   };
   message?: string;
 }
@@ -67,6 +66,7 @@ export const TaktzivitAPI = {
       targetId: string;
       targetName: string;
       paymentMethod: string;
+      nexAction: NextActionApp;
       cardData?: {
         cardNumber: string;
         expiry: string;
@@ -166,8 +166,8 @@ export const TaktzivitAPI = {
 
       if (result.success) {
         
-        switch (paymentDataToPAy.paymentMethod) {
-          case 'credit_card':
+        switch (paymentDataToPAy.nexAction) {
+          case 'typing':
             if (result.shvaCode && result.shvaCode.startsWith('000')) {
               console.log('התשלום אושר!');
               console.log('קוד אישור:', result.shvaCode);
@@ -184,7 +184,7 @@ export const TaktzivitAPI = {
               throw new Error(`תקלה בעיבוד התשלום. קוד שב"א: ${result.shvaCode}`);
             }
         
-          case 'bit':
+          case 'iframe':
             return result;
 
         
@@ -254,10 +254,9 @@ export const DonorAPI = {
               compId: responseData.IndexData.Id,
               logo: responseData.DisplayData.LogoUrl,
               donationAppName: responseData.DisplayData.Name,
-              bitOption: true,
-              paxShopOpt: !!responseData.IndexData.nameTerminal,
               terminalName: responseData.IndexData.nameTerminal,
-              items: responseData.PageItems
+              items: responseData.PageItems,
+              paymentOptions: responseData.paymentOptions
             }
           };
         } else {

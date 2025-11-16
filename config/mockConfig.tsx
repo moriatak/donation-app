@@ -19,9 +19,8 @@ export interface SynagogueConfig {
     auto_return_seconds: number;
     idle_timeout_seconds: number;
     require_id: boolean;
-    bit_option: boolean;
-    pax_shop_opt: boolean;
     showNameTerminal: boolean;
+    paymentOptions: Array<paymentOption>;
   };
 }
 
@@ -31,6 +30,19 @@ export interface DonationTarget {
   name: string;
   icon: string;
 }
+
+export interface paymentOption {
+  type: string;
+  name: string;
+  description: string;
+  typedoc: string;
+  NextActionApp: NextActionApp;
+  NextActionWeb: string;
+  icon: string;
+}
+// export type PaymentMethod = 'bit' | 'credit_card_touch' | 'credit_card' | 'recurring_payment';
+export type NextActionApp = 'typing' | 'iframe' | 'touch' | 'none';
+
 
 export const MOCK_QR_CONFIG: SynagogueConfig = {
   synagogue: {
@@ -59,8 +71,15 @@ export const MOCK_QR_CONFIG: SynagogueConfig = {
     auto_return_seconds: 60,
     idle_timeout_seconds: 120,
     require_id: false,
-    bit_option: false,
-    pax_shop_opt: false,
-    showNameTerminal: false
+    showNameTerminal: false,
+    paymentOptions: [{
+      type: 'bit',
+      name: 'string',
+      description: 'string',
+      typedoc: 'string',
+      NextActionApp: 'iframe',
+      NextActionWeb: 'string',
+      icon: 'string'
+    }],
   }
 };

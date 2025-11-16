@@ -1,98 +1,58 @@
+import { NextActionApp } from '@/config/mockConfig';
 import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-type PaymentMethod = 'bit' | 'credit-tap' | 'credit-manual';
+import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function PaymentMethodScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { config } = useConfig();
   
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+  const [nextActionAppSelected, setNextActionAppSelected] = useState<NextActionApp | null>(null);
   const [isProcessing, setIsProcessing] = useState(false); // משתנה חדש
-
-  const paymentMethods = [
-    ...(config.settings?.pax_shop_opt ? [{
-      id: 'credit-tap' as PaymentMethod,
-      name: 'אשראי בטאץ׳',
-      icon: '📱',
-      description: 'הצמד כרטיס אשראי לקורא',
-      color: '#8B5CF6'
-    }] : [] ),
-    ...(config.settings?.bit_option ? [{
-      id: 'bit' as PaymentMethod,
-      name: 'ביט',
-      icon: () => (
-        <View style={{ 
-          width: 40, 
-          height: 40, 
-          backgroundColor: '#004040', 
-          borderRadius: 10, 
-          justifyContent: 'center', 
-          alignItems: 'center' 
-        }}>
-          <Text style={{ 
-            color: '#40E0E0', 
-            fontWeight: 'bold', 
-            fontSize: 20,
-            fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif',
-            letterSpacing: -0.5
-          }}>
-            bit
-          </Text>
-        </View>
-      ),
-      description: 'תשלום מהיר דרך אפליקציית ביט',
-      color: '#0066CC'
-    }] : []),
-    {
-      id: 'credit-manual' as PaymentMethod,
-      name: 'אשראי הקלדה',
-      icon: '💳',
-      description: 'הזנת פרטי כרטיס אשראי ידנית',
-      color: '#16a34a'
-    }
-  ];
 
   useFocusEffect(
     useCallback(() => {
       // איפוס המצב בכל פעם שהמסך מקבל פוקוס
       setIsProcessing(false);
-      setSelectedMethod(null);
-      
+      setNextActionAppSelected(null);
+
       return () => {
         // פונקציה שתרוץ כשעוזבים את המסך (אופציונלי)
       };
     }, [])
   );
 
-  const handleMethodSelect = (method: PaymentMethod) => {
+  const handleMethodSelect = (nextAction: NextActionApp, type: string) => {
     // אם כבר מתבצע עיבוד, נצא מהפונקציה
     if (isProcessing) return;
     
     // מסמנים שהתחיל תהליך
     setIsProcessing(true);
-    setSelectedMethod(method);
-    
+    setNextActionAppSelected(nextAction);
     // מיד אחרי בחירת אמצעי התשלום, נעבור לדף הבא
-    if (method === 'bit') {
+    if (nextAction === 'iframe') {
       router.push({
-        pathname: '/bit-payment',
-        params: { ...params, paymentMethod: 'bit' }
+        pathname: '/iframe-payment',
+        params: { ...params, paymentMethod: type, nextAction }
       });
-    } else if (method === 'credit-manual') {
+    } else if (nextAction === 'typing') {
       router.push({
-        pathname: '/credit-card-manual',
-        params: { ...params }
+        pathname: '/credit-card',
+        params: { ...params, paymentMethod: type, nextAction }
       });
-    } else if (method === 'credit-tap') {
+    } else if (nextAction === 'touch') {
+      router.push({
+        pathname: '/credit-card-touch',
+        params: { ...params, paymentMethod: type, nextAction }
+      });
+    } else { // if nextAction === 'none'
       router.push({
         pathname: '/processing',
-        params: { ...params, paymentMethod: 'credit-tap' }
+        params: { ...params, paymentMethod: 'none', nextAction }
       });
     }
   };
@@ -114,48 +74,48 @@ export default function PaymentMethodScreen() {
           </Text>
           
           <View style={styles.methodsContainer}>
-            {paymentMethods.map((method) => (
-              <TouchableOpacity
-                key={method.id}
+            {config.settings.paymentOptions.map((method) => (
+              (method.type == 'recurring_payment' ? <></> : <TouchableOpacity
+                key={method.type}
                 style={[
                   styles.methodButton,
                   { borderColor: config.colors.secondary },
-                  selectedMethod === method.id && {
-                    backgroundColor: method.color,
-                    borderColor: method.color,
+                  nextActionAppSelected === method.NextActionApp && {
+                    backgroundColor: '#10b981',
+                    borderColor: '#10b981',
                     borderWidth: 3
                   },
                   // נוסיף סגנון מעומעם לכפתורים כשמתבצע עיבוד
-                  isProcessing && method.id !== selectedMethod && { opacity: 0.5 }
+                  isProcessing && method.NextActionApp !== nextActionAppSelected && { opacity: 0.5 }
                 ]}
-                onPress={() => handleMethodSelect(method.id)}
+                onPress={() => handleMethodSelect(method.NextActionApp, method.type)}
                 activeOpacity={0.7}
                 // נשבית את כל הכפתורים כשמתבצע עיבוד
                 disabled={isProcessing}
               >
                 <View style={styles.methodContent}>
-                {typeof method.icon === 'function' ? method.icon() : <Text style={styles.methodIcon}>{method.icon}</Text>}
+                <Image source={{ uri: method.icon }} style={styles.methodIcon} />
                   <View style={styles.methodTextContainer}>
                     <Text style={[
                       styles.methodName,
-                      { color: selectedMethod === method.id ? 'white' : config.colors.primary }
+                      { color: nextActionAppSelected === method.NextActionApp ? 'white' : config.colors.primary }
                     ]}>
                       {method.name}
                     </Text>
                     <Text style={[
                       styles.methodDescription,
-                      { color: selectedMethod === method.id ? 'rgba(255,255,255,0.9)' : '#6b7280' }
+                      { color: nextActionAppSelected === method.NextActionApp ? 'rgba(255,255,255,0.9)' : '#6b7280' }
                     ]}>
                       {method.description}
                     </Text>
                   </View>
-                  {selectedMethod === method.id && (
+                  {nextActionAppSelected === method.NextActionApp && (
                     <View style={styles.checkmark}>
                       <Text style={styles.checkmarkText}>✓</Text>
                     </View>
                   )}
                 </View>
-              </TouchableOpacity>
+              </TouchableOpacity>)
             ))}
           </View>
           
@@ -213,7 +173,8 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   methodIcon: {
-    fontSize: 40,
+    width: 50,
+    height: 50,
   },
   methodTextContainer: {
     flex: 1,

@@ -162,20 +162,10 @@ export default function LoginScreen() {
         console.log('Updated settings donation_targets to:', config.donation_targets);
 
       }
-      if (settings.bitOption && settings.bitOption == true) {
-        config.settings.bit_option = true;
-        console.log('Updated settings bitOption to:', true);
-      } else {
-        config.settings.bit_option = false;
-        console.log('Updated settings bitOption to:', false);
-      }
 
-      if (settings.paxShopOpt && settings.paxShopOpt == true) {
-        config.settings.pax_shop_opt = true;
-        console.log('Updated settings paxShopOpt to:', true);
-      } else {
-        config.settings.pax_shop_opt = false;
-        console.log('Updated settings paxShopOpt to:', false);
+      if (settings.paymentOptions) {
+        config.settings.paymentOptions = settings.paymentOptions;
+        console.log('Updated settings paymentOptions to:', settings.paymentOptions);
       }
 
       if (settings.showNameTerminal && settings.showNameTerminal == true) {
@@ -184,7 +174,6 @@ export default function LoginScreen() {
       } else {
         config.settings.showNameTerminal = false;
       }
-      
       
       if (settings.companyId) {
         config.settings.companyId = settings.companyId;

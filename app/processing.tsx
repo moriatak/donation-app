@@ -1,3 +1,4 @@
+import { NextActionApp } from '@/config/mockConfig';
 import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useId } from 'react';
@@ -35,8 +36,8 @@ export default function ProcessingScreen() {
 
   const processPayment = async () => {
     try {
-      // בדיקה אם זה מעבר למכשיר סליקה, לא צריך פרטי אשראי ואם זה הקלדה ידנית צריך פרטי אשראי
-      if (params.paymentMethod !== 'credit-tap' && !sensitiveCardData) {
+      // בדיקה אם יש פרטי אשראי
+      if (!sensitiveCardData) {
         throw new Error('פרטי כרטיס האשראי חסרים');
       }
 
@@ -51,9 +52,9 @@ export default function ProcessingScreen() {
           donorPhone: params.donorPhone as string,
           targetId: params.targetId as string,
           targetName: params.targetName as string,
-          paymentMethod: 'credit_card',
+          paymentMethod: params.paymentMethod as string,
+          nexAction: params.nexAction as NextActionApp,
           cardData: sensitiveCardData ? sensitiveCardData : null
-          
         }
       );
       

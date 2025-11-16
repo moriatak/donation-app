@@ -73,7 +73,6 @@ eas build -p ios
 - `app/` - קבצי המסכים והרכיבים העיקריים של האפליקציה
   - `_layout.tsx` - הגדרות ה-layout הכלליות
   - `index.tsx` - מסך הבית
-  - `bit-payment.tsx` - מסך עיבוד תשלומים
   - `confirmation.tsx` - מסך אישור התרומה
   - `processing.tsx` - מסך עיבוד התהליך
 - `services/` - שירותים ו-API

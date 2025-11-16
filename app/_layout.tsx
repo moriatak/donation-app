@@ -16,9 +16,9 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: '#ffffff' }
           }}
         >
-        <Stack.Screen name="login" />
         <Stack.Screen name="index" />
-        <Stack.Screen name="home" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="Home" />
         <Stack.Screen name="target-selection" />
         <Stack.Screen name="amount" />
         <Stack.Screen name="phone-verification" />
@@ -26,8 +26,8 @@ export default function RootLayout() {
         <Stack.Screen name="details" />
         <Stack.Screen name="payment-method" />
         <Stack.Screen name="confirmation" />
-        <Stack.Screen name="bit-payment" />
-        <Stack.Screen name="credit-card-manual" />
+        <Stack.Screen name="iframe-payment" />
+        <Stack.Screen name="credit-card" />
         <Stack.Screen name="processing" />
         <Stack.Screen name="success" />
         <Stack.Screen name="error" />

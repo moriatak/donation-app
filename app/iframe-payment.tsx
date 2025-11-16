@@ -1,3 +1,4 @@
+import { NextActionApp } from '@/config/mockConfig';
 import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
 import { TaktzivitAPI } from '@/services/api';
@@ -68,6 +69,7 @@ export default function BitPaymentScreen() {
         targetId: params.targetId as string,
         targetName: params.targetName as string,
         paymentMethod: params.paymentMethod as string,
+        nexAction: params.nextAction as NextActionApp
       });
 
       if (paymentResponse.success && paymentResponse.paymentUrl) {
@@ -144,7 +146,7 @@ export default function BitPaymentScreen() {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={config.colors.primary} />
             <Text style={[styles.loadingText, { color: config.colors.primary }]}>
-              מכין תשלום בביט...
+              מכין עמוד תשלום...
             </Text>
           </View>
         </View>
@@ -159,7 +161,7 @@ export default function BitPaymentScreen() {
           <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
             <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
           </TouchableOpacity>
-          <Text style={[styles.title, { color: config.colors.primary }]}>תשלום בביט</Text>
+          {/* <Text style={[styles.title, { color: config.colors.primary }]}>תשלום בביט</Text> */}
           <View style={{ width: 80 }} />
         </View>
 

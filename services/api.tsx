@@ -63,7 +63,7 @@ export const TaktzivitAPI = {
       donorLastName: string;
       donorEmail: string;
       donorPhone: string;
-      targetId: string;
+      targetItemId: string;
       targetName: string;
       paymentMethod: string;
       nexAction: NextActionApp;
@@ -104,10 +104,7 @@ export const TaktzivitAPI = {
         transaction: {
           items: [
             { 
-              itemId: '192', // תקציבית
-              // itemId: '3', // גדרה
-              // itemId: '305', // מעמק
-              // itemId: String(paymentData.targetId), 
+              itemId: String(paymentDataToPAy.targetItemId), 
               name: paymentDataToPAy.targetName, 
               unitAmount: Number(paymentDataToPAy.amount), 
               quantity: 1 

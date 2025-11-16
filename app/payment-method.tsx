@@ -69,54 +69,62 @@ export default function PaymentMethodScreen() {
         </View>
         
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={[styles.subtitle, { color: config.colors.primary }]}>
+          {(params.isMonthly === 'true' ? null : <Text style={[styles.subtitle, { color: config.colors.primary }]}>
             בחר את אמצעי התשלום המועדף עליך
-          </Text>
+          </Text>)}
           
           <View style={styles.methodsContainer}>
-            {config.settings.paymentOptions.map((method) => (
-              (method.type == 'recurring_payment' ? <></> : <TouchableOpacity
-                key={method.type}
-                style={[
-                  styles.methodButton,
-                  { borderColor: config.colors.secondary },
-                  nextActionAppSelected === method.NextActionApp && {
-                    backgroundColor: '#10b981',
-                    borderColor: '#10b981',
-                    borderWidth: 3
-                  },
-                  // נוסיף סגנון מעומעם לכפתורים כשמתבצע עיבוד
-                  isProcessing && method.NextActionApp !== nextActionAppSelected && { opacity: 0.5 }
-                ]}
-                onPress={() => handleMethodSelect(method.NextActionApp, method.type)}
-                activeOpacity={0.7}
-                // נשבית את כל הכפתורים כשמתבצע עיבוד
-                disabled={isProcessing}
-              >
-                <View style={styles.methodContent}>
-                <Image source={{ uri: method.icon }} style={styles.methodIcon} />
-                  <View style={styles.methodTextContainer}>
-                    <Text style={[
-                      styles.methodName,
-                      { color: nextActionAppSelected === method.NextActionApp ? 'white' : config.colors.primary }
-                    ]}>
-                      {method.name}
-                    </Text>
-                    <Text style={[
-                      styles.methodDescription,
-                      { color: nextActionAppSelected === method.NextActionApp ? 'rgba(255,255,255,0.9)' : '#6b7280' }
-                    ]}>
-                      {method.description}
-                    </Text>
-                  </View>
-                  {nextActionAppSelected === method.NextActionApp && (
-                    <View style={styles.checkmark}>
-                      <Text style={styles.checkmarkText}>✓</Text>
+          {config.settings.paymentOptions.map((method) => {
+              // אם זה תשלום חודשי - הצג רק הוראת קבע
+              if (params.isMonthly === 'true' && method.type !== 'recurring_payment') {
+                return null;
+              }
+              // אם זה לא תשלום חודשי - אל תצג הוראת קבע
+              if (params.isMonthly !== 'true' && method.type === 'recurring_payment') {
+                return null;
+              }
+              return (
+                <TouchableOpacity
+                  key={method.type}
+                  style={[
+                    styles.methodButton,
+                    { borderColor: config.colors.secondary },
+                    nextActionAppSelected === method.NextActionApp && {
+                      backgroundColor: '#10b981',
+                      borderColor: '#10b981',
+                      borderWidth: 3
+                    },
+                    isProcessing && method.NextActionApp !== nextActionAppSelected && { opacity: 0.5 }
+                  ]}
+                  onPress={() => handleMethodSelect(method.NextActionApp, method.type)}
+                  activeOpacity={0.7}
+                  disabled={isProcessing}
+                >
+                  <View style={styles.methodContent}>
+                    <Image source={{ uri: method.icon }} style={styles.methodIcon} />
+                    <View style={styles.methodTextContainer}>
+                      <Text style={[
+                        styles.methodName,
+                        { color: nextActionAppSelected === method.NextActionApp ? 'white' : config.colors.primary }
+                      ]}>
+                        {method.name}
+                      </Text>
+                      <Text style={[
+                        styles.methodDescription,
+                        { color: nextActionAppSelected === method.NextActionApp ? 'rgba(255,255,255,0.9)' : '#6b7280' }
+                      ]}>
+                        {method.description}
+                      </Text>
                     </View>
-                  )}
-                </View>
-              </TouchableOpacity>)
-            ))}
+                    {nextActionAppSelected === method.NextActionApp && (
+                      <View style={styles.checkmark}>
+                        <Text style={styles.checkmarkText}>✓</Text>
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
           
         </ScrollView>

@@ -102,7 +102,7 @@ export default function CreditCardManualScreen() {
     setTimeout(() => {
       router.push({
         pathname: '/processing',
-        params: { ...params, paymentMethod: params.paymentMethod, nextAction: params.nextAction }
+        params: { ...params, paymentMethod: params.paymentMethod, nextAction: params.nextAction, monthsCount: params.isMonthly ? params.monthsCount : 0 }
       });
     }, 1000);
   };

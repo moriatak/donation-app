@@ -61,7 +61,7 @@ export default function ConfirmationScreen() {
           
           </View>
           {params.isMonthly === 'true' && (
-    <>
+    <View style={styles.detailsSection}>
       <View style={styles.detailRow}>
         <Text style={[styles.detailLabel, { color: config.colors.primary }]}>סוג תרומה:</Text>
         <Text style={[styles.detailValue, { color: '#16a34a', fontWeight: 'bold' }]}>
@@ -84,7 +84,7 @@ export default function ConfirmationScreen() {
           </Text>
         </View>
       )}
-    </>
+      </View>
   )}
             <View style={styles.divider} />
             

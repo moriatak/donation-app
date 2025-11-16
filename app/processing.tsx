@@ -54,7 +54,8 @@ export default function ProcessingScreen() {
           targetName: params.targetName as string,
           paymentMethod: params.paymentMethod as string,
           nexAction: params.nexAction as NextActionApp,
-          cardData: sensitiveCardData ? sensitiveCardData : null
+          cardData: sensitiveCardData ? sensitiveCardData : null,
+          monthsCount: params.monthsCount ? params.monthsCount : null
         }
       );
       

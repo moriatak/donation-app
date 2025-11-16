@@ -72,7 +72,8 @@ export const TaktzivitAPI = {
         expiry: string;
         cvv: string;
         idNumber: string;
-      } | null
+      } | null,
+      monthsCount?: any
     }
   ): Promise<PaymentResponse | any> => {
     try {
@@ -88,7 +89,9 @@ export const TaktzivitAPI = {
         source: 'android', // חשוב! חייב להיות android
         
         paymentMethod: { 
-          type: paymentDataToPAy.paymentMethod
+          type: paymentDataToPAy.paymentMethod,
+          hok_pay_numbers: paymentDataToPAy.monthsCount === 'unlimited' ? undefined : paymentDataToPAy.monthsCount,
+          hok_not_limit: paymentDataToPAy.monthsCount === 'unlimited'
         },
         
         customerData: {

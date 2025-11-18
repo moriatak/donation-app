@@ -11,14 +11,14 @@ export default function PaymentMethodScreen() {
   const params = useLocalSearchParams();
   const { config } = useConfig();
   
-  const [nextActionAppSelected, setNextActionAppSelected] = useState<NextActionApp | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false); // משתנה חדש
 
   useFocusEffect(
     useCallback(() => {
       // איפוס המצב בכל פעם שהמסך מקבל פוקוס
       setIsProcessing(false);
-      setNextActionAppSelected(null);
+      setSelectedMethod(null);
 
       return () => {
         // פונקציה שתרוץ כשעוזבים את המסך (אופציונלי)
@@ -32,7 +32,7 @@ export default function PaymentMethodScreen() {
     
     // מסמנים שהתחיל תהליך
     setIsProcessing(true);
-    setNextActionAppSelected(nextAction);
+    setSelectedMethod(type);
     // מיד אחרי בחירת אמצעי התשלום, נעבור לדף הבא
     if (nextAction === 'iframe') {
       router.push({
@@ -76,11 +76,11 @@ export default function PaymentMethodScreen() {
           <View style={styles.methodsContainer}>
           {config.settings.paymentOptions.map((method) => {
               // אם זה תשלום חודשי - הצג רק הוראת קבע
-              if (params.isMonthly === 'true' && method.type !== 'recurring_payment') {
+              if (params.isMonthly === 'true' && !method.type.includes('recurring_payment')) {
                 return null;
               }
               // אם זה לא תשלום חודשי - אל תצג הוראת קבע
-              if (params.isMonthly !== 'true' && method.type === 'recurring_payment') {
+              if (params.isMonthly !== 'true' && method.type.includes('recurring_payment')) {
                 return null;
               }
               return (
@@ -89,12 +89,12 @@ export default function PaymentMethodScreen() {
                   style={[
                     styles.methodButton,
                     { borderColor: config.colors.secondary },
-                    nextActionAppSelected === method.NextActionApp && {
+                    selectedMethod === method.type && {
                       backgroundColor: '#10b981',
                       borderColor: '#10b981',
                       borderWidth: 3
                     },
-                    isProcessing && method.NextActionApp !== nextActionAppSelected && { opacity: 0.5 }
+                    isProcessing && method.type !== selectedMethod && { opacity: 0.5 }
                   ]}
                   onPress={() => handleMethodSelect(method.NextActionApp, method.type)}
                   activeOpacity={0.7}
@@ -105,18 +105,18 @@ export default function PaymentMethodScreen() {
                     <View style={styles.methodTextContainer}>
                       <Text style={[
                         styles.methodName,
-                        { color: nextActionAppSelected === method.NextActionApp ? 'white' : config.colors.primary }
+                        { color: selectedMethod === method.type ? 'white' : config.colors.primary }
                       ]}>
                         {method.name}
                       </Text>
                       <Text style={[
                         styles.methodDescription,
-                        { color: nextActionAppSelected === method.NextActionApp ? 'rgba(255,255,255,0.9)' : '#6b7280' }
+                        { color: selectedMethod === method.type ? 'rgba(255,255,255,0.9)' : '#6b7280' }
                       ]}>
                         {method.description}
                       </Text>
                     </View>
-                    {nextActionAppSelected === method.NextActionApp && (
+                    {selectedMethod === method.type && (
                       <View style={styles.checkmark}>
                         <Text style={styles.checkmarkText}>✓</Text>
                       </View>

@@ -106,7 +106,7 @@ export const TaktzivitAPI = {
             { 
               itemId: String(paymentDataToPAy.targetItemId), 
               name: paymentDataToPAy.targetName, 
-              unitAmount: Number(paymentDataToPAy.amount), 
+              price: Number(paymentDataToPAy.amount), 
               quantity: 1 
             }
           ]

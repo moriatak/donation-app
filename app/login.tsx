@@ -1,5 +1,6 @@
 import { DONATION_ICONS } from '@/config/donationIcons';
 import { useConfig } from '@/context/configContext';
+import UserTrackingService from '@/services/UserTrackingService';
 import { DonorAPI } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Camera, CameraView } from 'expo-camera';
@@ -71,6 +72,8 @@ export default function LoginScreen() {
       if (settings.success && settings.settings) {
         // השתמש בפונקציה החדשה לעדכון הקונפיג
         await updateConfigFromResponse(settings.settings, config);
+        
+        UserTrackingService.trackAction(settings.settings.companyId, tokenToUse, 'login');
         
         setShowSuccessModal(true);
   

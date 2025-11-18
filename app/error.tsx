@@ -1,6 +1,7 @@
 import { useConfig } from '@/context/configContext';
+import UserTrackingService from '@/services/UserTrackingService';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ErrorScreen() {
@@ -9,6 +10,14 @@ export default function ErrorScreen() {
   const { config } = useConfig();
   
   const errorMessage = params.errorMessage as string || 'אירעה שגיאה לא צפויה';
+  const [updateTracking, setUpdateTracking] = useState(false);
+
+  useEffect(()=>{
+    if(!updateTracking){
+      UserTrackingService.trackAction(config.settings.companyId, config.settings.tokenApi, 'error_page');
+      setUpdateTracking(true);
+    }
+  },[])
 
   return (
     <View style={[styles.container, { backgroundColor: '#fef2f2' }]}>

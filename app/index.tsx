@@ -1,8 +1,9 @@
 import { useConfig } from '@/context/configContext';
+import UserTrackingService from '@/services/UserTrackingService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, StyleSheet, Text, View } from 'react-native';
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -23,13 +24,34 @@ export default function SplashScreen() {
           }, 1500);
         }
       } catch (error) {
-        console.log('Error checking token or loading config:', error);
+        console.log('Error checking token:', error);
         router.replace('/login');
       }
     };
     
     checkTokenAndLoadConfig();
   }, [router]);
+
+  useEffect(() => {
+    // אתחול המעקב בהפעלת האפליקציה    
+    UserTrackingService.initTracking();
+    
+    // האזנה לשינויים במצב האפליקציה (פעיל/רקע/לא פעיל)
+    const appStateSubscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        // האפליקציה חזרה למצב פעיל
+        UserTrackingService.initTracking();
+      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+        // האפליקציה עברה לרקע או נסגרה
+        UserTrackingService.endSession();
+      }
+    });
+    
+    // ניקוי בעת הסרת הקומפוננטה
+    return () => {
+      appStateSubscription.remove();
+    };
+  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: config.colors.background }]}>

@@ -1,8 +1,10 @@
 import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
+import UserTrackingService from '@/services/UserTrackingService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Image, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, Image, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import HebrewDate from '../components/HebrewDate';
 
 export default function HomeScreen() {
@@ -13,6 +15,43 @@ export default function HomeScreen() {
   const handlePhoneIconPress = () => {
     router.push('/gabbai-phone-verification');
   };
+
+  useEffect(() => {
+    // אתחול מעקב
+    UserTrackingService.initTracking();
+    
+    // התחלת מעקב אחר ניתוק מרוחק
+    UserTrackingService.startLogoutMonitoring(
+      async (reason) => {
+        // בצע logout מיד
+        const keysToRemove = ['token', 'synagogue_config'];
+        await AsyncStorage.multiRemove(keysToRemove);
+        
+        await UserTrackingService.trackAction(
+          config.settings.companyId, 
+          config.settings.tokenApi, 
+          'logout'
+        );
+        
+        router.dismissAll();
+        router.replace('/login');
+        
+        // הצג הודעה לאחר הניתוב
+        setTimeout(() => {
+          Alert.alert(
+            'התנתקת מהמערכת',
+            reason || 'המכשיר נותק על ידי המנהל',
+            [{ text: 'הבנתי' }]
+          );
+        }, 500);
+      },
+      300000
+    );
+
+    return () => {
+      UserTrackingService.stopLogoutMonitoring();
+    };
+  }, []);
 
   return (
     <AuthGuard>

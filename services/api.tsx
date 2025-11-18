@@ -219,14 +219,14 @@ export const DonorAPI = {
       // apiToken = 'zr_54321zyxwv'
 
       // הדפסת הבקשה ללוג לפני שליחה
-      console.log('======== GET SETTINGS REQUEST ========');
-      console.log('URL:', GETSETTINGS_API_ENDPOINT);
-      console.log('METHOD: POST');
-      console.log('body: { apiKey: ****, api_token:', apiToken, '}');
-      console.log('======================================');
+      // console.log('======== GET SETTINGS REQUEST ========');
+      // console.log('URL:', GETSETTINGS_API_ENDPOINT);
+      // console.log('METHOD: POST');
+      // console.log('body: { apiKey: ****, token:', apiToken, '}');
+      // console.log('======================================');
+      
       const data = {
-        apiKey: API_KEY,
-        api_token: apiToken
+        token: apiToken
       }
       const response = await fetch(GETSETTINGS_API_ENDPOINT, {
         method: 'POST',
@@ -245,18 +245,19 @@ export const DonorAPI = {
         console.log('=======================================');
 
         // השרת מחזיר ישירות את האובייקט עם הנתונים
-        if (responseData.IndexData.IdCompany && responseData.IndexData.TokenUrl) {
+        if (responseData.success && responseData.settings.IdCompany && responseData.settings.TokenUrl) {
+          const dataToSave = responseData.settings;
           return {
             success: true,
             settings: {
-              companyId: responseData.IndexData.IdCompany,
-              compToken: responseData.IndexData.TokenUrl,
-              compId: responseData.IndexData.Id,
-              logo: responseData.DisplayData.LogoUrl,
-              donationAppName: responseData.DisplayData.Name,
-              terminalName: responseData.IndexData.nameTerminal,
-              items: responseData.PageItems,
-              paymentOptions: responseData.paymentOptions
+              companyId: dataToSave.IdCompany,
+              compToken: dataToSave.TokenUrl,
+              compId: dataToSave.Id,
+              logo: dataToSave.LogoUrl,
+              donationAppName: dataToSave.Name,
+              terminalName: dataToSave.nameTerminal,
+              items: dataToSave.PageItems,
+              paymentOptions: dataToSave.paymentOptions
             }
           };
         } else {

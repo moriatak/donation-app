@@ -1,8 +1,9 @@
 import { useConfig } from '@/context/configContext';
+import UserTrackingService from '@/services/UserTrackingService';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { TaktzivitAPI } from '../services/api';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+// import { TaktzivitAPI } from '../services/api';
 
 export default function SuccessScreen() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function SuccessScreen() {
   const { config } = useConfig();
   
   const [countdown, setCountdown] = useState(config.settings.auto_return_seconds);
+  const [updateTracking, setUpdateTracking] = useState(false);
   
   const target = {
     id: params.targetId as string,
@@ -40,26 +42,31 @@ export default function SuccessScreen() {
   
   // הוסף useEffect נפרד שמטפל בניווט כאשר countdown מגיע ל-0
   useEffect(() => {
+    if(!updateTracking){
+      UserTrackingService.trackAction(config.settings.companyId, config.settings.tokenApi, 'success_page');
+      setUpdateTracking(true);
+    }
+
     if (countdown === 0) {
       router.replace('/Home');
     }
   }, [countdown, router]);
   
-  const sendReceipt = async (method: 'sms' | 'email') => {
-    const contact = method === 'sms' ? donorDetails.phone : donorDetails.email;
+  // const sendReceipt = async (method: 'sms' | 'email') => {
+  //   const contact = method === 'sms' ? donorDetails.phone : donorDetails.email;
     
-    if (!contact) {
-      Alert.alert('שגיאה', `לא קיים ${method === 'sms' ? 'מספר טלפון' : 'אימייל'}`);
-      return;
-    }
+  //   if (!contact) {
+  //     Alert.alert('שגיאה', `לא קיים ${method === 'sms' ? 'מספר טלפון' : 'אימייל'}`);
+  //     return;
+  //   }
     
-    try {
-      await TaktzivitAPI.sendReceipt(idDoc, method, contact);
-      Alert.alert('הצלחה', `קבלה נשלחה ב-${method === 'sms' ? 'SMS' : 'אימייל'}`);
-    } catch (error) {
-      Alert.alert('שגיאה', 'שגיאה בשליחת הקבלה');
-    }
-  };
+  //   try {
+  //     await TaktzivitAPI.sendReceipt(idDoc, method, contact);
+  //     Alert.alert('הצלחה', `קבלה נשלחה ב-${method === 'sms' ? 'SMS' : 'אימייל'}`);
+  //   } catch (error) {
+  //     Alert.alert('שגיאה', 'שגיאה בשליחת הקבלה');
+  //   }
+  // };
 
   return (
     <View style={[styles.container, { backgroundColor: '#f0fdf4' }]}>

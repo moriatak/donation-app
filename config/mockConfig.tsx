@@ -40,7 +40,7 @@ export interface paymentOption {
   NextActionWeb: string;
   icon: string;
 }
-// export type PaymentMethod = 'bit' | 'credit_card_touch' | 'credit_card' | 'recurring_payment';
+// export type PaymentMethod = 'bit' | 'credit_card_touch' | 'credit_card' | 'recurring_payment | recurring_payment_immediate';
 export type NextActionApp = 'typing' | 'iframe' | 'touch' | 'none';
 
 

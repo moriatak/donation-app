@@ -179,7 +179,7 @@ export default function DetailsScreen() {
           
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: config.colors.primary }]}>
-              אימייל (אופציונלי)
+              אימייל
             </Text>
             <TextInput
               style={[
@@ -199,7 +199,7 @@ export default function DetailsScreen() {
           
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: config.colors.primary }]}>
-              הקדשה (אופציונלי)
+              הקדשה
             </Text>
             <TextInput
               style={[

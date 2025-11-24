@@ -4,54 +4,132 @@ import UserTrackingService from '@/services/UserTrackingService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Linking, Modal, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import HebrewDate from '../components/HebrewDate';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { config } = useConfig();
   const [logoError, setLogoError] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<{
+    forceUpdate: boolean;
+    message: string;
+    storeUrl: string;
+  } | null>(null);
 
   const handlePhoneIconPress = () => {
     router.push('/gabbai-phone-verification');
   };
 
-  useEffect(() => {
-    // אתחול מעקב
-    UserTrackingService.initTracking();
-    
-    // התחלת מעקב אחר ניתוק מרוחק
-    UserTrackingService.startLogoutMonitoring(
-      async (reason) => {
-        // בצע logout מיד
-        const keysToRemove = ['token', 'synagogue_config'];
-        await AsyncStorage.multiRemove(keysToRemove);
-        
-        await UserTrackingService.trackAction(
-          config.settings.companyId, 
-          config.settings.tokenApi, 
-          'logout'
-        );
-        
-        router.dismissAll();
-        router.replace('/login');
-        
-        // הצג הודעה לאחר הניתוב
-        setTimeout(() => {
-          Alert.alert(
-            'התנתקת מהמערכת',
-            reason || 'המכשיר נותק על ידי המנהל',
-            [{ text: 'הבנתי' }]
+    useEffect(() => {
+      // אתחול מעקב
+      UserTrackingService.initTracking();
+      
+      // התחלת מעקב אחר ניתוק מרוחק ועדכון גרסה
+      UserTrackingService.startDeviceMonitoring(
+        async (reason) => {
+          // בצע logout מיד
+          const keysToRemove = ['token', 'synagogue_config'];
+          await AsyncStorage.multiRemove(keysToRemove);
+          
+          await UserTrackingService.trackAction(
+            config.settings.companyId, 
+            config.settings.tokenApi, 
+            'logout'
           );
-        }, 500);
-      },
-      300000
-    );
+          
+          router.dismissAll();
+          router.replace({
+            pathname: '/login',
+            params: {
+              logoutMessage: reason || 'המכשיר נותק על ידי המנהל'
+            }
+          });          
+        },
+        async (deviceStatus) => {
+          console.log('in deviceStatus', deviceStatus)
+          // טיפול בעדכון גרסה
+          const storeUrl = Platform.OS === 'ios' 
+            ? deviceStatus.updateUrlIos || 'https://apps.apple.com/il/app/YOUR_APP_ID'
+            : deviceStatus.updateUrlAndroid || 'https://play.google.com/store/apps/details?id=YOUR_PACKAGE';
+          
+          setUpdateInfo({
+            forceUpdate: deviceStatus.forceUpdate || (deviceStatus.dismissalCount || 0) >= 30,
+            message: deviceStatus.updateMessage || 'גרסה חדשה זמינה',
+            storeUrl: storeUrl
+          });
+          setShowUpdateModal(true);
+        },
+        300000 // בזמן פיתוח
+        // 86400000 // 24 שעות במילישניות
+      );
+
 
     return () => {
       UserTrackingService.stopLogoutMonitoring();
     };
   }, []);
+
+  const UpdateModal = ({ 
+    visible, 
+    forceUpdate, 
+    message, 
+    storeUrl,
+    onDismiss 
+  }: { 
+    visible: boolean;
+    forceUpdate: boolean;
+    message: string;
+    storeUrl: string;
+    onDismiss: () => void;
+  }) => (
+      <Modal
+        visible={visible}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.updateModalOverlay}>
+          <View style={styles.updateModalContent}>
+            <View style={[styles.updateIconContainer, { backgroundColor: '#dbeafe' }]}>
+              <Text style={styles.updateIcon}>🔄</Text>
+            </View>
+            <Text style={styles.updateTitle}>
+              {forceUpdate ? 'נדרש עדכון' : 'עדכון זמין'}
+            </Text>
+            <Text style={styles.updateMessage}>{message}</Text>
+            
+            <View style={styles.updateButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.updateButton, styles.updateButtonPrimary, { backgroundColor: config.colors.primary }]}
+                onPress={() => {
+                  Linking.openURL(storeUrl);
+                  if (!forceUpdate) {
+                    setShowUpdateModal(false);
+                  }
+                }}
+              >
+                <Text style={styles.updateButtonText}>עדכן עכשיו</Text>
+              </TouchableOpacity>
+              
+              {!forceUpdate && (
+                <TouchableOpacity
+                  style={[styles.updateButton, styles.updateButtonSecondary]}
+                  onPress={async () => {
+                    await UserTrackingService.incrementUpdateDismissal();
+                    onDismiss();
+                  }}
+                >
+                  <Text style={[styles.updateButtonTextSecondary, { color: config.colors.primary }]}>
+                  עדכן בזמן אחר
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
 
   return (
     <AuthGuard>
@@ -98,14 +176,23 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={[styles.donationButton, { backgroundColor: config.colors.primary }]}
             onPress={() => router.push('/target-selection')}
+            // onPress={() => router.push('/ItemsScreen')}
             // onPress={() => router.push('/payment-method')}
             activeOpacity={0.8}
           >
             <Text style={styles.donationButtonText}>תרומה חדשה</Text>
+            {/* <Text style={styles.donationButtonText}>התחל קנייה </Text> */}
           </TouchableOpacity>
         </ScrollView>
 
       </View>
+      <UpdateModal
+        visible={showUpdateModal}
+        forceUpdate={updateInfo?.forceUpdate || false}
+        message={updateInfo?.message || ''}
+        storeUrl={updateInfo?.storeUrl || ''}
+        onDismiss={() => setShowUpdateModal(false)}
+      />
     </AuthGuard>
   );
 }
@@ -172,5 +259,72 @@ const styles = StyleSheet.create({
   },
   logoFallbackText: {
     fontSize: 60,
+  },
+  updateButtonsContainer: {
+    width: '100%',
+    gap: 10,
+  },
+  updateButton: {
+    paddingHorizontal: 40,
+    paddingVertical: 12,
+    borderRadius: 10,
+    width: '100%',
+  },
+  updateButtonPrimary: {
+    // backgroundColor מוגדר דינמית
+  },
+  updateButtonSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+  },
+  updateButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  updateButtonTextSecondary: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  updateModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  updateModalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 30,
+    alignItems: 'center',
+    width: '85%',
+    maxWidth: 400,
+  },
+  updateIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fee2e2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  updateIcon: {
+    fontSize: 40,
+  },
+  updateTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  updateMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 25,
   },
 });

@@ -70,7 +70,7 @@ export const MOCK_QR_CONFIG: SynagogueConfig = {
     terminalName: '',
     auto_return_seconds: 60,
     idle_timeout_seconds: 120,
-    require_id: false,
+    require_id: true,
     showNameTerminal: false,
     paymentOptions: [{
       type: 'bit',

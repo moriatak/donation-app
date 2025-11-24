@@ -4,7 +4,7 @@ import UserTrackingService from '@/services/UserTrackingService';
 import { DonorAPI } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Camera, CameraView } from 'expo-camera';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SynagogueConfig } from '../config/mockConfig';
@@ -12,7 +12,8 @@ import { SynagogueConfig } from '../config/mockConfig';
 export default function LoginScreen() {
   const router = useRouter();
   const { config, updateConfig } = useConfig();
-  
+  const { logoutMessage } = useLocalSearchParams<{ logoutMessage?: string }>();
+
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,11 +21,18 @@ export default function LoginScreen() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     loadSavedToken();
   }, []);
   
+  useEffect(() => {
+    if (logoutMessage) {
+      setShowLogoutModal(true);
+    }
+  }, [logoutMessage]);
+
   const loadSavedToken = async () => {
     try {
       const savedToken = await AsyncStorage.getItem('token');
@@ -228,6 +236,34 @@ export default function LoginScreen() {
     </Modal>
   );
 
+  const LogoutModal = ({ visible, message, onConfirm }: { 
+    visible: boolean; 
+    message: string; 
+    onConfirm: () => void 
+  }) => (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+    >
+      <View style={styles.logoutModalOverlay}>
+        <View style={styles.logoutModalContent}>
+          <View style={styles.logoutIconContainer}>
+            <Text style={styles.logoutIcon}>🔒</Text>
+          </View>
+          <Text style={styles.logoutTitle}>התנתקת מהמערכת</Text>
+          <Text style={styles.logoutMessage}>{message}</Text>
+          <TouchableOpacity
+            style={[styles.logoutButton, { backgroundColor: config.colors.primary }]}
+            onPress={onConfirm}
+          >
+            <Text style={styles.logoutButtonText}>הבנתי</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: config.colors.background }]}>
       <View style={styles.header}>
@@ -361,6 +397,11 @@ export default function LoginScreen() {
             params: {}
           });
         }} 
+      />
+      <LogoutModal
+        visible={showLogoutModal}
+        message={logoutMessage || ''}
+        onConfirm={() => setShowLogoutModal(false)}
       />
     </View>
   );
@@ -636,6 +677,56 @@ successButton: {
   width: '100%',
 },
 successButtonText: {
+  color: 'white',
+  fontSize: 18,
+  fontWeight: 'bold',
+  textAlign: 'center',
+},
+logoutModalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+logoutModalContent: {
+  backgroundColor: 'white',
+  borderRadius: 20,
+  padding: 30,
+  alignItems: 'center',
+  width: '85%',
+  maxWidth: 400,
+},
+logoutIconContainer: {
+  width: 80,
+  height: 80,
+  borderRadius: 40,
+  backgroundColor: '#fee2e2',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginBottom: 20,
+},
+logoutIcon: {
+  fontSize: 40,
+},
+logoutTitle: {
+  fontSize: 24,
+  fontWeight: 'bold',
+  marginBottom: 10,
+  textAlign: 'center',
+},
+logoutMessage: {
+  fontSize: 16,
+  color: '#666',
+  textAlign: 'center',
+  marginBottom: 25,
+},
+logoutButton: {
+  paddingHorizontal: 40,
+  paddingVertical: 12,
+  borderRadius: 10,
+  minWidth: 120,
+},
+logoutButtonText: {
   color: 'white',
   fontSize: 18,
   fontWeight: 'bold',

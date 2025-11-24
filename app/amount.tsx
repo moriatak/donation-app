@@ -173,7 +173,7 @@ const [showMonthPicker, setShowMonthPicker] = useState(false);
             )}
           </TouchableOpacity>
           
-          {Array.from({ length: 24 }, (_, i) => i + 1).map((num) => (
+          {Array.from({ length: 24 }, (_, i) => 24 - i).map((num) => (
             <TouchableOpacity
               key={num}
               style={[

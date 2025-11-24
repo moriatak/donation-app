@@ -80,7 +80,7 @@ export const TaktzivitAPI = {
       // יצירת אובייקט הבקשה שיישלח
       const requestBody = {
         token: config.settings.tokenApi,
-        apiToken: config.settings.tokenApi,
+        // apiToken: config.settings.tokenApi,
         companyId: config.settings.companyId,
         // token: config.settings.copmainingToken,
         parentName: config.settings.terminalName,

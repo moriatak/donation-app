@@ -2,13 +2,14 @@
   "expo": {
     "name": "donation-app",
     "slug": "donation-app",
-    "version": "1.0.0",
+    "version": "1.0.0", // גרסה לתצוגה
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "donationapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "buildNumber": "1", // חייב להיות גדול יותר
       "supportsTablet": true,
       "bundleIdentifier": "com.ayalon.donationapp"
     },
@@ -25,7 +26,8 @@
       "permissions": [
         "android.permission.NFC",
         "android.permission.CAMERA"
-      ]
+      ],
+      "versionCode": 1 // חייב להיות גדול יותר
     },
     "web": {
       "output": "static",

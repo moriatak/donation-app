@@ -1,8 +1,8 @@
 import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Modal, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function AmountScreen() {
   const router = useRouter();
@@ -21,7 +21,9 @@ export default function AmountScreen() {
 const [monthsCount, setMonthsCount] = useState('unlimited');
 const [showMonthPicker, setShowMonthPicker] = useState(false);
 
-  
+const scrollViewRef = useRef<ScrollView>(null);
+const customAmountRef = useRef<TextInput>(null);
+
   const finalAmount = customAmount || selectedAmount;
   const totalAmount = finalAmount && isMonthly && monthsCount !== 'unlimited' 
   ? Number(finalAmount) * Number(monthsCount) 
@@ -29,6 +31,11 @@ const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   return (
     <AuthGuard>
+       <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <View style={[styles.container, { backgroundColor: config.colors.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -38,7 +45,12 @@ const [showMonthPicker, setShowMonthPicker] = useState(false);
           <View style={{ width: 80 }} />
         </View>
         
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView 
+            ref={scrollViewRef}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
           <View style={[styles.targetBox, { borderColor: config.colors.secondary }]}>
             <Text style={styles.targetIcon}>{target.icon}</Text>
             <Text style={[styles.targetName, { color: config.colors.primary }]}>
@@ -75,16 +87,29 @@ const [showMonthPicker, setShowMonthPicker] = useState(false);
           <View style={[styles.customBox, { borderColor: config.colors.secondary }]}>
             <Text style={[styles.label, { color: config.colors.primary }]}>סכום אחר</Text>
             <View style={styles.inputWrapper}>
-              <TextInput
+            <TextInput
+                ref={customAmountRef}
                 style={[styles.input, { borderColor: config.colors.secondary }]}
                 value={customAmount}
                 onChangeText={(text) => {
                   setCustomAmount(text);
                   setSelectedAmount(null);
                 }}
+                onFocus={() => {
+                  setTimeout(() => {
+                    customAmountRef.current?.measure((fx, fy, width, height, px, py) => {
+                      scrollViewRef.current?.scrollTo({
+                        y: py - 150, // גלילה לשדה עם מרווח
+                        animated: true,
+                      });
+                    });
+                  }, 100);
+                }}
                 placeholder="הזן סכום"
                 keyboardType="numeric"
                 textAlign="right"
+                returnKeyType="done"
+                onSubmitEditing={() => customAmountRef.current?.blur()}
               />
               <Text style={styles.currency}>₪</Text>
             </View>
@@ -197,6 +222,7 @@ const [showMonthPicker, setShowMonthPicker] = useState(false);
               )}
             </TouchableOpacity>
           ))}
+          <View style={{ height: 100 }} />
         </ScrollView>
         
         <TouchableOpacity
@@ -216,8 +242,8 @@ const [showMonthPicker, setShowMonthPicker] = useState(false);
               !finalAmount && styles.disabled
             ]}
             onPress={() => router.push({
-              pathname: '/details', // כרגע אליהו ביקש שיהיה בלי זיהוי עם הזנה מלאה
-              // pathname: '/phone-verification', 
+              // pathname: '/details', // כרגע אליהו ביקש שיהיה בלי זיהוי עם הזנה מלאה
+              pathname: '/phone-verification', 
               params: { 
                   ...params, 
                   amount: finalAmount?.toString(),
@@ -232,6 +258,7 @@ const [showMonthPicker, setShowMonthPicker] = useState(false);
           </TouchableOpacity>
         </ScrollView>
       </View>
+      </KeyboardAvoidingView>
     </AuthGuard>
   );
 }

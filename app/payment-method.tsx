@@ -1,6 +1,7 @@
 import { NextActionApp } from '@/config/mockConfig';
 import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
+import { getAvailablePaymentMethods, navigateToPaymentMethod } from '@/utils/paymentUtils';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -12,7 +13,7 @@ export default function PaymentMethodScreen() {
   const { config } = useConfig();
   
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false); // משתנה חדש
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -27,35 +28,17 @@ export default function PaymentMethodScreen() {
   );
 
   const handleMethodSelect = (nextAction: NextActionApp, type: string) => {
-    // אם כבר מתבצע עיבוד, נצא מהפונקציה
     if (isProcessing) return;
     
-    // מסמנים שהתחיל תהליך
     setIsProcessing(true);
     setSelectedMethod(type);
-    // מיד אחרי בחירת אמצעי התשלום, נעבור לדף הבא
-    if (nextAction === 'iframe') {
-      router.push({
-        pathname: '/iframe-payment',
-        params: { ...params, paymentMethod: type, nextAction }
-      });
-    } else if (nextAction === 'typing') {
-      router.push({
-        pathname: '/credit-card',
-        params: { ...params, paymentMethod: type, nextAction }
-      });
-    } else if (nextAction === 'touch') {
-      router.push({
-        pathname: '/credit-card-touch',
-        params: { ...params, paymentMethod: type, nextAction }
-      });
-    } else { // if nextAction === 'none'
-      router.push({
-        pathname: '/processing',
-        params: { ...params, paymentMethod: 'none', nextAction }
-      });
-    }
+    navigateToPaymentMethod(router, nextAction, type, params);
   };
+
+  const availablePaymentMethods = getAvailablePaymentMethods(
+    config.settings.paymentOptions, 
+    params.isMonthly as string
+  );
 
   return (
     <AuthGuard>
@@ -74,57 +57,47 @@ export default function PaymentMethodScreen() {
           </Text>)}
           
           <View style={styles.methodsContainer}>
-          {config.settings.paymentOptions.map((method) => {
-              // אם זה תשלום חודשי - הצג רק הוראת קבע
-              if (params.isMonthly === 'true' && !method.type.includes('recurring_payment')) {
-                return null;
-              }
-              // אם זה לא תשלום חודשי - אל תצג הוראת קבע
-              if (params.isMonthly !== 'true' && method.type.includes('recurring_payment')) {
-                return null;
-              }
-              return (
-                <TouchableOpacity
-                  key={method.type}
-                  style={[
-                    styles.methodButton,
-                    { borderColor: config.colors.secondary },
-                    selectedMethod === method.type && {
-                      backgroundColor: '#10b981',
-                      borderColor: '#10b981',
-                      borderWidth: 3
-                    },
-                    isProcessing && method.type !== selectedMethod && { opacity: 0.5 }
-                  ]}
-                  onPress={() => handleMethodSelect(method.NextActionApp, method.type)}
-                  activeOpacity={0.7}
-                  disabled={isProcessing}
-                >
-                  <View style={styles.methodContent}>
-                    <Image source={{ uri: method.icon }} style={styles.methodIcon} />
-                    <View style={styles.methodTextContainer}>
-                      <Text style={[
-                        styles.methodName,
-                        { color: selectedMethod === method.type ? 'white' : config.colors.primary }
-                      ]}>
-                        {method.name}
-                      </Text>
-                      <Text style={[
-                        styles.methodDescription,
-                        { color: selectedMethod === method.type ? 'rgba(255,255,255,0.9)' : '#6b7280' }
-                      ]}>
-                        {method.description}
-                      </Text>
-                    </View>
-                    {selectedMethod === method.type && (
-                      <View style={styles.checkmark}>
-                        <Text style={styles.checkmarkText}>✓</Text>
-                      </View>
-                    )}
+            {availablePaymentMethods.map((method) => (
+              <TouchableOpacity
+                key={method.type}
+                style={[
+                  styles.methodButton,
+                  { borderColor: config.colors.secondary },
+                  selectedMethod === method.type && {
+                    backgroundColor: '#10b981',
+                    borderColor: '#10b981',
+                    borderWidth: 3
+                  },
+                  isProcessing && method.type !== selectedMethod && { opacity: 0.5 }
+                ]}
+                onPress={() => handleMethodSelect(method.NextActionApp, method.type)}
+                activeOpacity={0.7}
+                disabled={isProcessing}
+              >
+                <View style={styles.methodContent}>
+                  <Image source={{ uri: method.icon }} style={styles.methodIcon} />
+                  <View style={styles.methodTextContainer}>
+                    <Text style={[
+                      styles.methodName,
+                      { color: selectedMethod === method.type ? 'white' : config.colors.primary }
+                    ]}>
+                      {method.name}
+                    </Text>
+                    <Text style={[
+                      styles.methodDescription,
+                      { color: selectedMethod === method.type ? 'rgba(255,255,255,0.9)' : '#6b7280' }
+                    ]}>
+                      {method.description}
+                    </Text>
                   </View>
-                </TouchableOpacity>
-              );
-            })}
+                  {selectedMethod === method.type && (
+                    <View style={styles.checkmark}>
+                      <Text style={styles.checkmarkText}>✓</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
           
         </ScrollView>

@@ -66,7 +66,7 @@ export const TaktzivitAPI = {
       targetItemId: string;
       targetName: string;
       paymentMethod: string;
-      nexAction: NextActionApp;
+      nextAction: NextActionApp;
       cardData?: {
         cardNumber: string;
         expiry: string;
@@ -166,9 +166,10 @@ export const TaktzivitAPI = {
 
       if (result.success) {
         
-        switch (paymentDataToPAy.nexAction) {
+        switch (paymentDataToPAy.nextAction) {
           case 'typing':
-            if (result.shvaCode && result.shvaCode.startsWith('000')) {
+            if (result.shvaCode && result.shvaCode.length >= 3 && /^\d{3}/.test(result.shvaCode)) {
+              // בודק שיש לפחות 3 ספרות
               console.log('התשלום אושר!');
               console.log('קוד אישור:', result.shvaCode);
               

@@ -60,7 +60,7 @@ export default function CreditCardTouchScreen() {
           targetItemId: params.targetItemId as string,
           targetName: params.targetName as string,
           paymentMethod: params.paymentMethod as string,
-          nexAction: params.nextAction as NextActionApp,
+          nextAction: params.nextAction as NextActionApp,
           cardData: null // אין צורך בפרטי כרטיס במעבר לקורא
         }
       );

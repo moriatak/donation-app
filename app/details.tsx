@@ -1,8 +1,8 @@
 import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Validators } from '../services/validators';
 
 interface FormData {
@@ -27,6 +27,15 @@ export default function DetailsScreen() {
   const params = useLocalSearchParams();
   const { config } = useConfig();
   
+  // רפרנסים לשדות
+  const firstNameRef = useRef<TextInput>(null);
+  const lastNameRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const idNumberRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const dedicationRef = useRef<TextInput>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  
   // בדיקה אם זה תורם מאומת
   const isVerified = params.isVerified === 'true';
   const isPhoneLocked = params.isPhoneLocked === 'true';
@@ -41,6 +50,27 @@ export default function DetailsScreen() {
   });
   const [errors, setErrors] = useState<Errors>({});
   const [showNewDonorModal, setShowNewDonorModal] = useState(params.showNewDonorModal ? true : false);
+  
+  useFocusEffect(
+    useCallback(() => {
+      // גלילה למעלה כשחוזרים לעמוד
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+      return () => {
+      };
+    }, [])
+  );
+
+  // פונקציה לגלילה לשדה
+  const scrollToInput = (inputRef: React.RefObject<TextInput | null>) => {
+    setTimeout(() => {
+      inputRef.current?.measure((fx, fy, width, height, px, py) => {
+        scrollViewRef.current?.scrollTo({
+          y: py - 100, // קצת מרווח מעל השדה
+          animated: true,
+        });
+      });
+    }, 100);
+  };
   
   const handleSubmit = () => {
     const newErrors: Errors = {
@@ -76,187 +106,231 @@ export default function DetailsScreen() {
 
   return (
     <AuthGuard>
-      <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
-          </TouchableOpacity>
-          <Text style={[styles.title, { color: config.colors.primary }]}>
-            {isVerified ? 'אישור פרטים' : 'פרטי תורם'}
-          </Text>
-          <View style={{ width: 80 }} />
-        </View>
-        
-        <ScrollView contentContainerStyle={styles.content}>
-          {isVerified && (
-            <View style={[styles.verifiedBanner, { backgroundColor: '#dcfce7', borderColor: '#16a34a' }]}>
-              <Text style={styles.verifiedIcon}>✓</Text>
-              <View style={styles.verifiedTextContainer}>
-                <Text style={styles.verifiedTitle}>אנחנו כבר מכירים:)</Text>
-                <Text style={styles.verifiedSubtitle}>בדוק את הפרטים ועדכן במידת הצורך</Text>
-              </View>
-            </View>
-          )}
-          
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: config.colors.primary }]}>
-              שם פרטי <Text style={styles.required}>*</Text>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <View style={[styles.container, { backgroundColor: config.colors.background }]}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
+            </TouchableOpacity>
+            <Text style={[styles.title, { color: config.colors.primary }]}>
+              {isVerified ? 'אישור פרטים' : 'פרטי תורם'}
             </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { borderColor: errors.firstName ? '#ef4444' : config.colors.secondary },
-                isVerified && { backgroundColor: '#f0fdf4' }
-              ]}
-              value={formData.firstName}
-              onChangeText={(text) => setFormData({ ...formData, firstName: text })}
-              placeholder="הזן שם פרטי"
-              textAlign="right"
-            />
-            {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: config.colors.primary }]}>
-              שם משפחה <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { borderColor: errors.lastName ? '#ef4444' : config.colors.secondary },
-                isVerified && { backgroundColor: '#f0fdf4' }
-              ]}
-              value={formData.lastName}
-              onChangeText={(text) => setFormData({ ...formData, lastName: text })}
-              placeholder="הזן שם משפחה"
-              textAlign="right"
-            />
-            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+            <View style={{ width: 80 }} />
           </View>
           
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: config.colors.primary }]}>
-              טלפון <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { borderColor: errors.phone ? '#ef4444' : config.colors.secondary },
-                isPhoneLocked && { backgroundColor: '#f3f4f6' }
-              ]}
-              value={formData.phone}
-              onChangeText={(text) => setFormData({ ...formData, phone: text })}
-              placeholder="05X-XXX-XXXX"
-              keyboardType="phone-pad"
-              textAlign="right"
-              editable={!isPhoneLocked}
-            />
-            {isPhoneLocked && (
-              <Text style={styles.lockedText}>🔒 מספר מאומת</Text>
-            )}
-            {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: config.colors.primary }]}>
-              תעודת זהות {config.settings.require_id && <Text style={styles.required}>*</Text>}
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { borderColor: errors.idNumber ? '#ef4444' : config.colors.secondary },
-                isVerified && formData.idNumber && { backgroundColor: '#f0fdf4' }
-              ]}
-              value={formData.idNumber}
-              onChangeText={(text) => setFormData({ ...formData, idNumber: text })}
-              placeholder="9 ספרות"
-              keyboardType="numeric"
-              maxLength={9}
-              textAlign="right"
-            />
-            {errors.idNumber && <Text style={styles.errorText}>{errors.idNumber}</Text>}
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: config.colors.primary }]}>
-              אימייל
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { borderColor: errors.email ? '#ef4444' : config.colors.secondary },
-                isVerified && formData.email && { backgroundColor: '#f0fdf4' }
-              ]}
-              value={formData.email}
-              onChangeText={(text) => setFormData({ ...formData, email: text })}
-              placeholder="example@email.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              textAlign="right"
-            />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: config.colors.primary }]}>
-              הקדשה
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                styles.textArea,
-                { borderColor: config.colors.secondary }
-              ]}
-              value={formData.dedication}
-              onChangeText={(text) => setFormData({ ...formData, dedication: text })}
-              placeholder="לזכר / לעילוי נשמת..."
-              multiline
-              numberOfLines={3}
-              textAlign="right"
-              textAlignVertical="top"
-            />
-          </View>
-          
-          <TouchableOpacity
-            style={[styles.continueButton, { backgroundColor: config.colors.primary }]}
-            onPress={handleSubmit}
+          <ScrollView 
+            ref={scrollViewRef}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.continueText}>המשך</Text>
-          </TouchableOpacity>
-        </ScrollView>
-
-        {/* Custom Modal for New Donor */}
-        <Modal
-          visible={showNewDonorModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowNewDonorModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: 'white' }]}>
-              <View style={styles.modalIconContainer}>
-                <Text style={styles.modalIcon}>🔍</Text>
+            {isVerified && (
+              <View style={[styles.verifiedBanner, { backgroundColor: '#dcfce7', borderColor: '#16a34a' }]}>
+                <Text style={styles.verifiedIcon}>✓</Text>
+                <View style={styles.verifiedTextContainer}>
+                  <Text style={styles.verifiedTitle}>אנחנו כבר מכירים:)</Text>
+                  <Text style={styles.verifiedSubtitle}>בדוק את הפרטים ועדכן במידת הצורך</Text>
+                </View>
               </View>
-              
-              <Text style={[styles.modalTitle, { color: config.colors.primary }]}>
-                לא זיהינו אותך במערכת
+            )}
+            
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>
+                שם פרטי <Text style={styles.required}>*</Text>
               </Text>
-
-              <Text style={styles.modalMessage}>
-                נראה שזו הפעם הראשונה שלך איתנו{'\n'}
-                נצטרך כמה פרטים כדי להמשיך
-              </Text>
-
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: config.colors.primary }]}
-                onPress={handleNewDonorContinue}
-              >
-                <Text style={styles.modalButtonText}>למלא פרטים</Text>
-              </TouchableOpacity>
+              <TextInput
+                ref={firstNameRef}
+                style={[
+                  styles.input,
+                  { borderColor: errors.firstName ? '#ef4444' : config.colors.secondary },
+                  isVerified && { backgroundColor: '#f0fdf4' }
+                ]}
+                value={formData.firstName}
+                onChangeText={(text) => setFormData({ ...formData, firstName: text })}
+                onFocus={() => scrollToInput(firstNameRef)}
+                placeholder="הזן שם פרטי"
+                textAlign="right"
+                returnKeyType="next"
+                onSubmitEditing={() => lastNameRef.current?.focus()}
+                blurOnSubmit={false}
+              />
+              {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
             </View>
-          </View>
-        </Modal>
-      </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>
+                שם משפחה <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                ref={lastNameRef}
+                style={[
+                  styles.input,
+                  { borderColor: errors.lastName ? '#ef4444' : config.colors.secondary },
+                  isVerified && { backgroundColor: '#f0fdf4' }
+                ]}
+                value={formData.lastName}
+                onChangeText={(text) => setFormData({ ...formData, lastName: text })}
+                onFocus={() => scrollToInput(lastNameRef)}
+                placeholder="הזן שם משפחה"
+                textAlign="right"
+                returnKeyType="next"
+                onSubmitEditing={() => phoneRef.current?.focus()}
+                blurOnSubmit={false}
+              />
+              {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>
+                טלפון <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                ref={phoneRef}
+                style={[
+                  styles.input,
+                  { borderColor: errors.phone ? '#ef4444' : config.colors.secondary },
+                  isPhoneLocked && { backgroundColor: '#f3f4f6' }
+                ]}
+                value={formData.phone}
+                onChangeText={(text) => setFormData({ ...formData, phone: text })}
+                onFocus={() => scrollToInput(phoneRef)}
+                placeholder="05X-XXX-XXXX"
+                keyboardType="phone-pad"
+                textAlign="right"
+                editable={!isPhoneLocked}
+                returnKeyType="next"
+                onSubmitEditing={() => idNumberRef.current?.focus()}
+                blurOnSubmit={false}
+              />
+              {isPhoneLocked && (
+                <Text style={styles.lockedText}>🔒 מספר מאומת</Text>
+              )}
+              {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>
+                תעודת זהות <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                ref={idNumberRef}
+                style={[
+                  styles.input,
+                  { borderColor: errors.idNumber ? '#ef4444' : config.colors.secondary },
+                  isVerified && formData.idNumber && { backgroundColor: '#f0fdf4' }
+                ]}
+                value={formData.idNumber}
+                onChangeText={(text) => setFormData({ ...formData, idNumber: text })}
+                onFocus={() => scrollToInput(idNumberRef)}
+                placeholder="9 ספרות"
+                keyboardType="numeric"
+                maxLength={9}
+                textAlign="right"
+                returnKeyType="next"
+                onSubmitEditing={() => emailRef.current?.focus()}
+                blurOnSubmit={false}
+              />
+              {errors.idNumber && <Text style={styles.errorText}>{errors.idNumber}</Text>}
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>
+                אימייל
+              </Text>
+              <TextInput
+                ref={emailRef}
+                style={[
+                  styles.input,
+                  { borderColor: errors.email ? '#ef4444' : config.colors.secondary },
+                  isVerified && formData.email && { backgroundColor: '#f0fdf4' }
+                ]}
+                value={formData.email}
+                onChangeText={(text) => setFormData({ ...formData, email: text })}
+                onFocus={() => scrollToInput(emailRef)}
+                placeholder="example@email.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                textAlign="right"
+                // returnKeyType="next"
+                onSubmitEditing={() => dedicationRef.current?.focus()}
+                blurOnSubmit={false}
+              />
+              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>
+                הקדשה
+              </Text>
+              <TextInput
+                ref={dedicationRef}
+                style={[
+                  styles.input,
+                  styles.textArea,
+                  { borderColor: config.colors.secondary }
+                ]}
+                value={formData.dedication}
+                onChangeText={(text) => setFormData({ ...formData, dedication: text })}
+                onFocus={() => scrollToInput(dedicationRef)}
+                placeholder="לזכר / לעילוי נשמת..."
+                // multiline
+                // numberOfLines={3}
+                scrollEnabled={true}
+                textAlign="right"
+                textAlignVertical="top"
+                returnKeyType="done"
+                onSubmitEditing={() => dedicationRef.current?.blur()}
+              />
+            </View>
+            
+            <TouchableOpacity
+              style={[styles.continueButton, { backgroundColor: config.colors.primary }]}
+              onPress={handleSubmit}
+            >
+              <Text style={styles.continueText}>המשך</Text>
+            </TouchableOpacity>
+            
+            {/* מרווח נוסף בתחתית למקרה של מקלדת */}
+            <View style={{ height: 100 }} />
+          </ScrollView>
+
+          {/* Custom Modal for New Donor */}
+          <Modal
+            visible={showNewDonorModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowNewDonorModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={[styles.modalContent, { backgroundColor: 'white' }]}>
+                <View style={styles.modalIconContainer}>
+                  <Text style={styles.modalIcon}>🔍</Text>
+                </View>
+                
+                <Text style={[styles.modalTitle, { color: config.colors.primary }]}>
+                  לא זיהינו אותך במערכת
+                </Text>
+
+                <Text style={styles.modalMessage}>
+                  נראה שזו הפעם הראשונה שלך איתנו{'\n'}
+                  נצטרך כמה פרטים כדי להמשיך
+                </Text>
+
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: config.colors.primary }]}
+                  onPress={handleNewDonorContinue}
+                >
+                  <Text style={styles.modalButtonText}>למלא פרטים</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        </View>
+      </KeyboardAvoidingView>
     </AuthGuard>
   );
 }
@@ -332,7 +406,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   textArea: {
-    minHeight: 80,
+    minHeight: 70,
     textAlignVertical: 'top',
   },
   lockedText: {

@@ -1,14 +1,22 @@
 import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { usePaymentContext } from '../context/PaymentContext';
 
 export default function CreditCardManualScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { config } = useConfig();
+  
+  // רפרנסים לשדות
+  const cardNumberRef = useRef<TextInput>(null);
+  const cardHolderRef = useRef<TextInput>(null);
+  const expiryRef = useRef<TextInput>(null);
+  const cvvRef = useRef<TextInput>(null);
+  const idNumberRef = useRef<TextInput>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
   
   const [cardData, setCardData] = useState({
     cardNumber: '',
@@ -31,6 +39,17 @@ export default function CreditCardManualScreen() {
     }, [])
   );
 
+  // פונקציה לגלילה לשדה
+  const scrollToInput = (inputRef: React.RefObject<TextInput | null>) => {
+    setTimeout(() => {
+      inputRef && inputRef.current?.measure((fx, fy, width, height, px, py) => {
+        scrollViewRef.current?.scrollTo({
+          y: py - 100, // קצת מרווח מעל השדה
+          animated: true,
+        });
+      });
+    }, 100);
+  };
 
   const formatCardNumber = (text: string) => {
     const cleaned = text.replace(/\s/g, '');
@@ -109,150 +128,191 @@ export default function CreditCardManualScreen() {
 
   return (
     <AuthGuard>
-      <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
-          </TouchableOpacity>
-          <Text style={[styles.title, { color: config.colors.primary }]}>פרטי כרטיס אשראי</Text>
-          <View style={{ width: 80 }} />
-        </View>
-        
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={[styles.amountBox, { backgroundColor: config.colors.primary }]}>
-            <Text style={styles.amountLabel}>סכום לחיוב</Text>
-            <Text style={styles.amount}>₪{params.amount}</Text>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <View style={[styles.container, { backgroundColor: config.colors.background }]}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
+            </TouchableOpacity>
+            <Text style={[styles.title, { color: config.colors.primary }]}>פרטי כרטיס אשראי</Text>
+            <View style={{ width: 80 }} />
           </View>
           
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: config.colors.primary }]}>
-              מספר כרטיס <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { borderColor: errors.cardNumber ? '#ef4444' : config.colors.secondary }
-              ]}
-              value={cardData.cardNumber}
-              onChangeText={(text) => setCardData({ 
-                ...cardData, 
-                cardNumber: formatCardNumber(text) 
-              })}
-              placeholder="1234 5678 9012 3456"
-              keyboardType="numeric"
-              maxLength={19}
-            />
-            {errors.cardNumber && <Text style={styles.errorText}>{errors.cardNumber}</Text>}
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: config.colors.primary }]}>
-              שם בעל הכרטיס <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { borderColor: errors.cardHolder ? '#ef4444' : config.colors.secondary }
-              ]}
-              value={cardData.cardHolder}
-              onChangeText={(text) => setCardData({ ...cardData, cardHolder: text })}
-              placeholder="כפי שמופיע על הכרטיס"
-              autoCapitalize="words"
-            />
-            {errors.cardHolder && <Text style={styles.errorText}>{errors.cardHolder}</Text>}
-          </View>
-          
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={[styles.label, { color: config.colors.primary }]}>
-                CVV <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  { borderColor: errors.cvv ? '#ef4444' : config.colors.secondary }
-                ]}
-                value={cardData.cvv}
-                onChangeText={(text) => setCardData({ 
-                  ...cardData, 
-                  cvv: text.replace(/\D/g, '').substring(0, 3)
-                })}
-                placeholder="123"
-                keyboardType="numeric"
-                maxLength={3}
-                secureTextEntry
-              />
-              {errors.cvv && <Text style={styles.errorText}>{errors.cvv}</Text>}
-            </View>
-            
-            <View style={{ width: 15 }} />
-            
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={[styles.label, { color: config.colors.primary }]}>
-                תוקף <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  { borderColor: errors.expiry ? '#ef4444' : config.colors.secondary }
-                ]}
-                value={cardData.expiry}
-                onChangeText={(text) => setCardData({ 
-                  ...cardData, 
-                  expiry: formatExpiry(text)
-                })}
-                placeholder="MM/YY"
-                keyboardType="numeric"
-                maxLength={5}
-              />
-              {errors.expiry && <Text style={styles.errorText}>{errors.expiry}</Text>}
-            </View>
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: config.colors.primary }]}>
-              ת״ז בעל הכרטיס <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { borderColor: errors.idNumber ? '#ef4444' : config.colors.secondary }
-              ]}
-              value={cardData.idNumber}
-              onChangeText={(text) => setCardData({ 
-                ...cardData, 
-                idNumber: text.replace(/\D/g, '').substring(0, 9)
-              })}
-              placeholder="9 ספרות"
-              keyboardType="numeric"
-              maxLength={9}
-            />
-            {errors.idNumber && <Text style={styles.errorText}>{errors.idNumber}</Text>}
-          </View>
-          
-          {/* <View style={styles.secureBox}>
-            <Text style={styles.secureIcon}>🔒</Text>
-            <Text style={styles.secureText}>
-              פרטי הכרטיס מוצפנים ומאובטחים בתקן PCI-DSS
-            </Text>
-          </View> */}
-          
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              { backgroundColor: config.colors.primary },
-              loading && styles.disabled
-            ]}
-            onPress={handleSubmit}
-            disabled={loading}
+          <ScrollView 
+            ref={scrollViewRef}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.submitButtonText}>
-              {'אשר תשלום'}
-              {/* {loading ? 'מעבד...' : 'אשר תשלום'} */}
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
+            <View style={[styles.amountBox, { backgroundColor: config.colors.primary }]}>
+              <Text style={styles.amountLabel}>סכום לחיוב</Text>
+              <Text style={styles.amount}>₪{params.amount}</Text>
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>
+                מספר כרטיס <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                ref={cardNumberRef}
+                style={[
+                  styles.input,
+                  { borderColor: errors.cardNumber ? '#ef4444' : config.colors.secondary }
+                ]}
+                value={cardData.cardNumber}
+                onChangeText={(text) => {
+                  const formatted = formatCardNumber(text);
+                  setCardData({ ...cardData, cardNumber: formatted });
+                }}
+                onFocus={() => scrollToInput(cardNumberRef)}
+                placeholder="1234 5678 9012 3456"
+                keyboardType="numeric"
+                maxLength={19}
+                returnKeyType="next"
+                blurOnSubmit={false}
+              />
+              {errors.cardNumber && <Text style={styles.errorText}>{errors.cardNumber}</Text>}
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>
+                שם בעל הכרטיס <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                ref={cardHolderRef}
+                style={[
+                  styles.input,
+                  { borderColor: errors.cardHolder ? '#ef4444' : config.colors.secondary }
+                ]}
+                value={cardData.cardHolder}
+                onChangeText={(text) => setCardData({ ...cardData, cardHolder: text })}
+                onFocus={() => scrollToInput(cardHolderRef)}
+                placeholder="כפי שמופיע על הכרטיס"
+                autoCapitalize="words"
+                returnKeyType="next"
+                blurOnSubmit={false}
+              />
+              {errors.cardHolder && <Text style={styles.errorText}>{errors.cardHolder}</Text>}
+            </View>
+            
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={[styles.label, { color: config.colors.primary }]}>
+                  CVV <Text style={styles.required}>*</Text>
+                </Text>
+                <TextInput
+                  ref={cvvRef}
+                  style={[
+                    styles.input,
+                    { borderColor: errors.cvv ? '#ef4444' : config.colors.secondary }
+                  ]}
+                  value={cardData.cvv}
+                  onChangeText={(text) => {
+                    const cleaned = text.replace(/\D/g, '').substring(0, 3);
+                    setCardData({ ...cardData, cvv: cleaned });
+                    
+                    // מעבר אוטומטי כשהשדה מלא
+                    if (cleaned.length === 3) {
+                      setTimeout(() => idNumberRef.current?.focus(), 100);
+                    }
+                  }}
+                  onFocus={() => scrollToInput(cvvRef)}
+                  placeholder="333"
+                  keyboardType="numeric"
+                  maxLength={3}
+                  secureTextEntry
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                />
+                {errors.cvv && <Text style={styles.errorText}>{errors.cvv}</Text>}
+              </View>
+              
+              <View style={{ width: 15 }} />
+              
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={[styles.label, { color: config.colors.primary }]}>
+                  תוקף <Text style={styles.required}>*</Text>
+                </Text>
+                <TextInput
+                  ref={expiryRef}
+                  style={[
+                    styles.input,
+                    { borderColor: errors.expiry ? '#ef4444' : config.colors.secondary }
+                  ]}
+                  value={cardData.expiry}
+                  onChangeText={(text) => {
+                    const formatted = formatExpiry(text);
+                    setCardData({ ...cardData, expiry: formatted });
+                    
+                    // מעבר אוטומטי כשהשדה מלא
+                    if (formatted.length === 5) {
+                      setTimeout(() => cvvRef.current?.focus(), 100);
+                    }
+                  }}
+                  onFocus={() => scrollToInput(expiryRef)}
+                  placeholder="MM/YY"
+                  keyboardType="numeric"
+                  maxLength={5}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                />
+                {errors.expiry && <Text style={styles.errorText}>{errors.expiry}</Text>}
+              </View>
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>
+                ת״ז בעל הכרטיס <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                ref={idNumberRef}
+                style={[
+                  styles.input,
+                  { borderColor: errors.idNumber ? '#ef4444' : config.colors.secondary }
+                ]}
+                value={cardData.idNumber}
+                onChangeText={(text) => setCardData({ 
+                  ...cardData, 
+                  idNumber: text.replace(/\D/g, '').substring(0, 9)
+                })}
+                onFocus={() => scrollToInput(idNumberRef)}
+                placeholder="9 ספרות"
+                keyboardType="numeric"
+                maxLength={9}
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                  idNumberRef.current?.blur();
+                  if (validateCard()) {
+                    handleSubmit();
+                  }
+                }}
+              />
+              {errors.idNumber && <Text style={styles.errorText}>{errors.idNumber}</Text>}
+            </View>
+            
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                { backgroundColor: config.colors.primary },
+                loading && styles.disabled
+              ]}
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              <Text style={styles.submitButtonText}>
+                {loading ? 'מעבד...' : 'אשר תשלום'}
+              </Text>
+            </TouchableOpacity>
+            
+            {/* מרווח נוסף בתחתית למקרה של מקלדת */}
+            <View style={{ height: 100 }} />
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </AuthGuard>
   );
 }
@@ -350,6 +410,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+    marginTop: 20,
   },
   disabled: { opacity: 0.5 },
   submitButtonText: {

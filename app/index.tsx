@@ -3,7 +3,7 @@ import UserTrackingService from '@/services/UserTrackingService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { ActivityIndicator, AppState, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, Image, StyleSheet, Text, View } from 'react-native';
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -55,7 +55,8 @@ export default function SplashScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-      <Text style={styles.icon}>🕍</Text>
+      {/* <Text style={styles.icon}>🕍</Text> */}
+      <Image source={{ uri: 'https://tak.co.il/new/images/logo_splash.png' }} style={styles.methodIcon} />
       <Text style={[styles.title, { color: config.colors.primary }]}>
         מערכת תרומות
       </Text>
@@ -83,5 +84,9 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     marginBottom: 20,
+  },
+  methodIcon: {
+    width: 300,
+    height: 300,
   },
 });

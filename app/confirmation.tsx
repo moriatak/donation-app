@@ -1,5 +1,6 @@
 import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
+import { getAvailablePaymentMethods, navigateToPaymentMethod } from '@/utils/paymentUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -29,11 +30,22 @@ export default function ConfirmationScreen() {
   };
   
   const handlePayment = () => {
-    // במקום לעבד תשלום, מעבר לבחירת אמצעי תשלום
-    router.push({
-      pathname: '/payment-method',
-      params: { ...params }
-    });
+    const availablePaymentMethods = getAvailablePaymentMethods(
+      config.settings.paymentOptions, 
+      params.isMonthly as string
+    );
+    
+    if (availablePaymentMethods.length === 1) {
+      // אם יש רק אמצעי תשלום אחד - עבור ישירות
+      const singleMethod = availablePaymentMethods[0];
+      navigateToPaymentMethod(router, singleMethod.NextActionApp, singleMethod.type, params);
+    } else {
+      // אם יש יותר מאמצעי תשלום אחד - עבור לבחירה
+      router.push({
+        pathname: '/payment-method',
+        params: { ...params }
+      });
+    }
   };
 
   return (

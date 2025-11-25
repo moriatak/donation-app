@@ -8,6 +8,7 @@ import uuid from 'react-native-uuid';
 interface UserTrackingData {
   device_id: string;
   device_type: string;
+  device_name: string | null;
   app_version?: string;
   last_login_date: string;
   is_active: boolean;
@@ -71,9 +72,7 @@ class UserTrackingService {
       appVersion: this.getAppVersion(),
       buildNumber: this.getBuildNumber(),
       platform: Platform.OS,
-      // platformVersion: Platform.Version.toString(),
-      // deviceBrand: Device.brand,
-      deviceModel: Device.modelName,
+      deviceName: Device.modelName,
       deviceId: Device.osBuildId,
     };
   }
@@ -128,13 +127,14 @@ class UserTrackingService {
    */
   public static async initTracking(): Promise<ServerResponse> {
     try {
-      console.log(">>>> >> tt", this.getDeviceInfo());
 
+      const deviceInfo = this.getDeviceInfo();
       const deviceId = await this.getDeviceId();
       const deviceType = Platform.OS;
       const trackingData: UserTrackingData = {
         device_id: deviceId,
         device_type: deviceType,
+        device_name: Device.modelName,
         app_version: this.getAppVersion(),
         last_login_date: new Date().toISOString(),
         is_active: true
@@ -167,6 +167,7 @@ class UserTrackingService {
         device_id: deviceId,
         device_type: Platform.OS,
         app_version: this.getAppVersion(),
+        device_name: Device.modelName,
         last_login_date: new Date().toISOString(),
         is_active: false,
         session_duration: sessionDuration
@@ -203,6 +204,7 @@ class UserTrackingService {
       const trackingData: UserTrackingData = {
         device_id: deviceId,
         device_type: Platform.OS,
+        device_name: Device.modelName,
         app_version: this.getAppVersion(),
         last_login_date: new Date().toISOString(),
         is_active: true,

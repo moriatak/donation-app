@@ -61,8 +61,8 @@ export default function HomeScreen() {
           });
           setShowUpdateModal(true);
         },
-        300000 // בזמן פיתוח
-        // 86400000 // 24 שעות במילישניות
+        // 300000 // בזמן פיתוח
+        86400000 // 24 שעות במילישניות
       );
 
 

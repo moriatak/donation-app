@@ -19,7 +19,7 @@ export const Validators = {
   },
   
   israeliId: (id: string): string => {
-    if (!id) return '';
+    if (!id) return 'נדרש תעודת זהות';
     if (!/^\d{9}$/.test(id)) return 'מספר זהות לא תקין';
     
     let sum = 0;

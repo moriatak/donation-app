@@ -1,17 +1,20 @@
 {
   "expo": {
-    "name": "donation-app",
+    "name": "מערכת תרומות",
     "slug": "donation-app",
-    "version": "1.0.0", // גרסה לתצוגה
+    "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/splash_icon.png",
     "scheme": "donationapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "buildNumber": "1", // חייב להיות גדול יותר
       "supportsTablet": true,
-      "bundleIdentifier": "com.ayalon.donationapp"
+      "bundleIdentifier": "com.ayalon.donationapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -61,7 +64,8 @@
             "deploymentTarget": "15.1"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -53,7 +53,7 @@ export default function ProcessingScreen() {
           targetItemId: params.targetItemId as string,
           targetName: params.targetName as string,
           paymentMethod: params.paymentMethod as string,
-          nexAction: params.nexAction as NextActionApp,
+          nextAction: params.nextAction as NextActionApp,
           cardData: sensitiveCardData ? sensitiveCardData : null,
           monthsCount: params.monthsCount ? params.monthsCount : null
         }

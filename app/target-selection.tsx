@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   grid: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },

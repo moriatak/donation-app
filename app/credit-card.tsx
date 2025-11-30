@@ -174,6 +174,7 @@ export default function CreditCardManualScreen() {
                 maxLength={19}
                 returnKeyType="next"
                 blurOnSubmit={false}
+                onSubmitEditing={() => cardHolderRef.current?.focus()}
               />
               {errors.cardNumber && <Text style={styles.errorText}>{errors.cardNumber}</Text>}
             </View>
@@ -195,6 +196,7 @@ export default function CreditCardManualScreen() {
                 autoCapitalize="words"
                 returnKeyType="next"
                 blurOnSubmit={false}
+                onSubmitEditing={() => expiryRef.current?.focus()}
               />
               {errors.cardHolder && <Text style={styles.errorText}>{errors.cardHolder}</Text>}
             </View>
@@ -214,19 +216,15 @@ export default function CreditCardManualScreen() {
                   onChangeText={(text) => {
                     const cleaned = text.replace(/\D/g, '').substring(0, 3);
                     setCardData({ ...cardData, cvv: cleaned });
-                    
-                    // מעבר אוטומטי כשהשדה מלא
-                    if (cleaned.length === 3) {
-                      setTimeout(() => idNumberRef.current?.focus(), 100);
-                    }
                   }}
                   onFocus={() => scrollToInput(cvvRef)}
-                  placeholder="333"
+                  placeholder="123"
                   keyboardType="numeric"
                   maxLength={3}
                   secureTextEntry
                   returnKeyType="next"
                   blurOnSubmit={false}
+                  onSubmitEditing={() => idNumberRef.current?.focus()}
                 />
                 {errors.cvv && <Text style={styles.errorText}>{errors.cvv}</Text>}
               </View>
@@ -247,11 +245,6 @@ export default function CreditCardManualScreen() {
                   onChangeText={(text) => {
                     const formatted = formatExpiry(text);
                     setCardData({ ...cardData, expiry: formatted });
-                    
-                    // מעבר אוטומטי כשהשדה מלא
-                    if (formatted.length === 5) {
-                      setTimeout(() => cvvRef.current?.focus(), 100);
-                    }
                   }}
                   onFocus={() => scrollToInput(expiryRef)}
                   placeholder="MM/YY"
@@ -259,6 +252,7 @@ export default function CreditCardManualScreen() {
                   maxLength={5}
                   returnKeyType="next"
                   blurOnSubmit={false}
+                  onSubmitEditing={() => cvvRef.current?.focus()}
                 />
                 {errors.expiry && <Text style={styles.errorText}>{errors.expiry}</Text>}
               </View>

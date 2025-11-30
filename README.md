@@ -52,8 +52,8 @@ npm install -g eas-cli
 ```bash
 eas login
 ```
-שם משתמש: ayalon
-סיסמה: ayalon123
+שם משתמש: devtak
+סיסמה: devtak2483
 ```bash
 eas build:configure
 npx expo install expo-dev-client

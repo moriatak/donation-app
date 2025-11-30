@@ -249,11 +249,11 @@ public static async checkDeviceStatus(): Promise<DeviceStatusResponse> {
     //   }
     // }
     // הדפסת הבקשה ללוג לפני שליחה
-      console.log('======== GET check status REQUEST ========');
-      console.log('URL: /user-tracking/check-device-status');
-      console.log('METHOD: POST');
-      console.log('body: { device_type: ios, device_id:', deviceId, ', app_version: ',currentVersion,'}');
-      console.log('======================================');
+      // console.log('======== GET check status REQUEST ========');
+      // console.log('URL: /user-tracking/check-device-status');
+      // console.log('METHOD: POST');
+      // console.log('body: { device_type: ios, device_id:', deviceId, ', app_version: ',currentVersion,'}');
+      // console.log('======================================');
 
     const response = await this.sendRequest('/user-tracking/check-device-status', {
       device_id: deviceId,
@@ -261,9 +261,9 @@ public static async checkDeviceStatus(): Promise<DeviceStatusResponse> {
       app_version: currentVersion
     });
      // הדפסת התשובה שהתקבלה
-     console.log('======== GET check status RESPONSE ========');
-     console.log(JSON.stringify(response, null, 2));
-     console.log('=======================================');
+    //  console.log('======== GET check status RESPONSE ========');
+    //  console.log(JSON.stringify(response, null, 2));
+    //  console.log('=======================================');
     
     // שמירת זמן הבדיקה
     // await AsyncStorage.setItem('last_version_check', now.toString());

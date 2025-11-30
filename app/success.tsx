@@ -20,7 +20,7 @@ export default function SuccessScreen() {
   };
   
   const amount = params.amount as string;
-  const idDoc = params.idDoc as string;
+  const docId = params.docId as string;
   const donorDetails = {
     phone: params.donorPhone as string,
     email: params.donorEmail as string
@@ -61,7 +61,7 @@ export default function SuccessScreen() {
   //   }
     
   //   try {
-  //     await TaktzivitAPI.sendReceipt(idDoc, method, contact);
+  //     await TaktzivitAPI.sendReceipt(docId, method, contact);
   //     Alert.alert('הצלחה', `קבלה נשלחה ב-${method === 'sms' ? 'SMS' : 'אימייל'}`);
   //   } catch (error) {
   //     Alert.alert('שגיאה', 'שגיאה בשליחת הקבלה');
@@ -91,7 +91,7 @@ export default function SuccessScreen() {
           
           <Text style={styles.label}>מספר אישור</Text>
           <Text style={[styles.transactionId, { color: config.colors.primary }]}>
-            {idDoc}
+            {docId}
           </Text>
         </View>
         

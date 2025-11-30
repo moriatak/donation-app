@@ -158,17 +158,19 @@ const handleSuccessModalClose = () => {
             </View>
             
             {config.settings.showNameTerminal ? <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>שם מסוף</Text>
+              <Text style={styles.inputLabel}>מספר קופה</Text>
               <TextInput
                 style={styles.textInput}
-                value={editConfig.settings.terminalName}
+                value={editConfig.settings.paxShopNum}
                 onChangeText={(text) => setEditConfig({
                   ...editConfig,
-                  settings: { ...editConfig.settings, terminalName: text }
+                  settings: { ...editConfig.settings, paxShopNum: text }
                 })}
-                placeholder="שם מסוף"
+                placeholder="מספר קופה"
                 placeholderTextColor="#999"
                 textAlign="right"
+                keyboardType="numeric"
+                maxLength={3}
               />
             </View>: null}
             {/* <View style={styles.inputGroup}>

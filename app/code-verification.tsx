@@ -1,7 +1,7 @@
 import { useConfig } from '@/context/configContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { DonorAPI } from '../services/api';
 
 export default function CodeVerificationScreen() {
@@ -19,6 +19,7 @@ export default function CodeVerificationScreen() {
   const [loading, setLoading] = useState(false);
   
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -56,6 +57,17 @@ export default function CodeVerificationScreen() {
     if (e.nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
+  };
+
+  const handleInputFocus = (index: number) => {
+    setTimeout(() => {
+      inputRefs.current[index]?.measure((fx, fy, width, height, px, py) => {
+        scrollViewRef.current?.scrollTo({
+          y: py - 200, // גלילה לשדה עם מרווח
+          animated: true,
+        });
+      });
+    }, 100);
   };
 
   const verifyCode = async (codeString: string) => {
@@ -138,72 +150,87 @@ export default function CodeVerificationScreen() {
   const maskedPhone = phone.slice(0, 3) + '-XXX-X' + phone.slice(-3);
 
   return (
-    <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: config.colors.primary }]}>אימות קוד</Text>
-        <View style={{ width: 80 }} />
-      </View>
-      
-      <View style={styles.content}>
-        <View style={styles.iconContainer}>
-          <Text style={styles.icon}>✉️</Text>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <View style={[styles.container, { backgroundColor: config.colors.background }]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
+          </TouchableOpacity>
+          <Text style={[styles.title, { color: config.colors.primary }]}>אימות קוד</Text>
+          <View style={{ width: 80 }} />
         </View>
         
-        <Text style={[styles.description, { color: config.colors.primary }]}>
-          שלחנו קוד אימות ל:
-        </Text>
-        <Text style={[styles.phone, { color: config.colors.secondary }]}>
-          {maskedPhone}
-        </Text>
-        
-        <View style={styles.codeContainer}>
-          {code.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={(ref: TextInput | null) => {
-                inputRefs.current[index] = ref;
-              }}              
-              style={[
-                styles.codeInput,
-                { borderColor: config.colors.secondary },
-                digit && { borderColor: config.colors.primary, borderWidth: 2 }
-              ]}
-              value={digit}
-              onChangeText={(value) => handleCodeChange(value, index)}
-              onKeyPress={(e) => handleKeyPress(e, index)}
-              keyboardType="number-pad"
-              maxLength={1}
-              textAlign="center"
-              autoFocus={index === 0}
-              editable={!loading}
-            />
-          ))}
-        </View>
-        
-        <View style={styles.resendContainer}>
-          {canResend ? (
-            <TouchableOpacity onPress={handleResend}>
-              <Text style={[styles.resendText, { color: config.colors.primary }]}>
-                שלח שוב
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <Text style={styles.countdownText}>
-              שלח שוב בעוד {countdown} שניות
-            </Text>
-          )}
-        </View>
-        
-        <TouchableOpacity onPress={handleManualEntry} style={styles.manualButton}>
-          <Text style={[styles.manualText, { color: config.colors.primary }]}>
-            להזנה ידנית
+        <ScrollView 
+          ref={scrollViewRef}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.iconContainer}>
+            <Text style={styles.icon}>✉️</Text>
+          </View>
+          
+          <Text style={[styles.description, { color: config.colors.primary }]}>
+            שלחנו קוד אימות ל:
           </Text>
-        </TouchableOpacity>
+          <Text style={[styles.phone, { color: config.colors.secondary }]}>
+            {maskedPhone}
+          </Text>
+          
+          <View style={styles.codeContainer}>
+            {code.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={(ref: TextInput | null) => {
+                  inputRefs.current[index] = ref;
+                }}              
+                style={[
+                  styles.codeInput,
+                  { borderColor: config.colors.secondary },
+                  digit && { borderColor: config.colors.primary, borderWidth: 2 }
+                ]}
+                value={digit}
+                onChangeText={(value) => handleCodeChange(value, index)}
+                onKeyPress={(e) => handleKeyPress(e, index)}
+                onFocus={() => handleInputFocus(index)}
+                keyboardType="number-pad"
+                maxLength={1}
+                textAlign="center"
+                autoFocus={index === 0}
+                editable={!loading}
+              />
+            ))}
+          </View>
+          
+          <View style={styles.resendContainer}>
+            {canResend ? (
+              <TouchableOpacity onPress={handleResend}>
+                <Text style={[styles.resendText, { color: config.colors.primary }]}>
+                  שלח שוב
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.countdownText}>
+                שלח שוב בעוד {countdown} שניות
+              </Text>
+            )}
+          </View>
+          
+          <TouchableOpacity onPress={handleManualEntry} style={styles.manualButton}>
+            <Text style={[styles.manualText, { color: config.colors.primary }]}>
+              להזנה ידנית
+            </Text>
+          </TouchableOpacity>
+          
+          {/* מרווח נוסף למטה כדי להבטיח גלילה טובה */}
+          <View style={{ height: 100 }} />
+        </ScrollView>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -227,7 +254,12 @@ const styles = StyleSheet.create({
   backButton: { padding: 12, backgroundColor: '#f3f4f6', borderRadius: 12 },
   backButtonText: { fontSize: 16, fontWeight: '600' },
   title: { fontSize: 24, fontWeight: 'bold' },
-  content: { flex: 1, padding: 20, paddingTop: 60, alignItems: 'center' },
+  content: { 
+    padding: 20, 
+    paddingTop: 60, 
+    alignItems: 'center',
+    flexGrow: 1 // מבטיח שהתוכן יתמלא ויאפשר גלילה
+  },
   iconContainer: { marginBottom: 30 },
   icon: { fontSize: 80 },
   description: {

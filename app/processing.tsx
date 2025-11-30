@@ -65,7 +65,7 @@ export default function ProcessingScreen() {
           params: {
             ...params,
             transactionId: paymentResponse.transactionId,
-            idDoc: paymentResponse.idDoc
+            docId: paymentResponse.docId
           }
         });
       }

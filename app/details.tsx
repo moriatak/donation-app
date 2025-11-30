@@ -255,7 +255,7 @@ export default function DetailsScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 textAlign="right"
-                // returnKeyType="next"
+                returnKeyType="next"
                 onSubmitEditing={() => dedicationRef.current?.focus()}
                 blurOnSubmit={false}
               />

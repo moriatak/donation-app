@@ -5,8 +5,8 @@ import { DonorAPI } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Camera, CameraView } from 'expo-camera';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SynagogueConfig } from '../config/mockConfig';
 
 export default function LoginScreen() {
@@ -22,6 +22,10 @@ export default function LoginScreen() {
   const [scanned, setScanned] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Refs לגלילה
+  const scrollViewRef = useRef<ScrollView>(null);
+  const tokenInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     loadSavedToken();
@@ -122,7 +126,6 @@ export default function LoginScreen() {
     
     setScanned(true);
     setShowQRScanner(false);
-    console.log('QR data:', data);
     
     try {
       // נניח שה-QR מכיל את הטוקן (או JSON עם token)
@@ -137,7 +140,6 @@ export default function LoginScreen() {
       } catch {
         // אם זה לא JSON, נשתמש בערך כמו שהוא
       }
-      console.log('Token from QR:', tokenFromQR);
       // התחברות אוטומטית עם הטוקן מה-QR
       handleLogin(tokenFromQR);
     } catch (error) {
@@ -146,17 +148,28 @@ export default function LoginScreen() {
     }
   };
 
+  // פונקציה לטיפול בפתיחת המקלדת וגלילה לשדה הטוקן
+  const handleTokenInputFocus = () => {
+    setTimeout(() => {
+      tokenInputRef.current?.measure((fx, fy, width, height, px, py) => {
+        scrollViewRef.current?.scrollTo({
+          y: py - 100, // גלילה לשדה עם מרווח
+          animated: true,
+        });
+      });
+    }, 100);
+  };
+
   const updateConfigFromResponse = async (settings: any, config: SynagogueConfig) => {
     try {      
       if (settings.donationAppName) {
         config.synagogue.name = settings.donationAppName;
-        console.log('Updated synagogue name to:', settings.donationAppName);
+        // console.log('Updated synagogue name to:', settings.donationAppName);
       }
       if (settings.logo) {
         config.synagogue.logo_url = settings.logo;
-        console.log('Updated synagogue logo_url to:', settings.logo);
+        // console.log('Updated synagogue logo_url to:', settings.logo);
       }
-      console.log('settings.items:', settings.items);
 
       if(settings.items && settings.items.length > 0) {
         config.donation_targets = settings.items.map((item: any, index: number) => {
@@ -170,13 +183,13 @@ export default function LoginScreen() {
             icon: item.IconLink || defaultIcon // משתמש באייקון מהמערך אם אין אייקון מוגדר
           };
         });
-        console.log('Updated settings donation_targets to:', config.donation_targets);
+        // console.log('Updated settings donation_targets to:', config.donation_targets);
 
       }
 
       if (settings.paymentOptions) {
         config.settings.paymentOptions = settings.paymentOptions;
-        console.log('Updated settings paymentOptions to:', settings.paymentOptions);
+        // console.log('Updated settings paymentOptions to:', settings.paymentOptions);
       }
 
       if (settings.showNameTerminal && settings.showNameTerminal == true) {
@@ -188,22 +201,22 @@ export default function LoginScreen() {
       
       if (settings.companyId) {
         config.settings.companyId = settings.companyId;
-        console.log('Updated synagogue companyId to:', settings.companyId);
+        // console.log('Updated synagogue companyId to:', settings.companyId);
         
       }
       if (settings.compId) {
         config.settings.copmainingId = settings.compId;
-        console.log('Updated synagogue copmainingId to:', settings.compId);
+        // console.log('Updated synagogue copmainingId to:', settings.compId);
 
       }
       if (settings.compToken) {
         config.settings.copmainingToken = settings.compToken;
-        console.log('Updated synagogue compToken to:', settings.compToken);
+        // console.log('Updated synagogue compToken to:', settings.compToken);
       }
 
-      if (settings.terminalName) {
-        config.settings.terminalName = settings.terminalName;
-        console.log('Updated synagogue terminalName to:', settings.terminalName);
+      if (settings.paxShopNum) {
+        config.settings.paxShopNum = settings.paxShopNum;
+        // console.log('Updated synagogue paxShopNum to:', settings.paxShopNum);
       }
       await updateConfig(config);
     } catch (error) {
@@ -265,145 +278,162 @@ export default function LoginScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: config.colors.primary }]}>התחברות למערכת</Text>
-      </View>
-      
-      <View style={styles.content}>
-        <View style={styles.iconContainer}>
-          <Text style={styles.icon}>🔐</Text>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <View style={[styles.container, { backgroundColor: config.colors.background }]}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: config.colors.primary }]}>התחברות למערכת</Text>
         </View>
         
-        <Text style={[styles.description, { color: config.colors.primary }]}>
-          ברוכים הבאים
-        </Text>
-        <Text style={styles.subdescription}>
-          סרקו קוד QR או הזינו טוקן להתחברות
-        </Text>
-
-        {/* כפתור סריקת QR */}
-        <TouchableOpacity
-          style={[styles.qrButton, { borderColor: config.colors.primary }]}
-          onPress={handleQRScan}
-          disabled={loading}
+        <ScrollView 
+          ref={scrollViewRef}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.qrIcon}>📷</Text>
-          <Text style={[styles.qrButtonText, { color: config.colors.primary }]}>
-            סרוק קוד QR
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.content}>
+            <View style={styles.iconContainer}>
+              <Text style={styles.icon}>🔐</Text>
+            </View>
+            
+            <Text style={[styles.description, { color: config.colors.primary }]}>
+              ברוכים הבאים
+            </Text>
+            <Text style={styles.subdescription}>
+              סרקו קוד QR או הזינו טוקן להתחברות
+            </Text>
 
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>או הזן טוקן</Text>
-          <View style={styles.dividerLine} />
-        </View>
-        
-        {/* שדה טוקן */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: config.colors.primary }]}>
-            טוקן
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              { borderColor: error ? '#ef4444' : config.colors.secondary }
-            ]}
-            value={token}
-            onChangeText={(text: string) => {
-              setToken(text);
-              setError('');
-            }}
-            placeholder="הזן טוקן"
-            textAlign="right"
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!loading}
-          />
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        </View>
-        
-        <TouchableOpacity
-          style={[
-            styles.loginButton,
-            { backgroundColor: config.colors.primary },
-            loading && styles.disabled
-          ]}
-          onPress={() => handleLogin()}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="white" size="small" />
-          ) : (
-            <Text style={styles.loginText}>התחבר</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* QR Scanner Modal */}
-      <Modal
-        visible={showQRScanner}
-        animationType="slide"
-        onRequestClose={() => setShowQRScanner(false)}
-      >
-        <View style={styles.qrScannerContainer}>
-          <View style={styles.qrScannerHeader}>
-            <Text style={styles.qrScannerTitle}>סרוק קוד QR</Text>
+            {/* כפתור סריקת QR */}
             <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowQRScanner(false)}
+              style={[styles.qrButton, { borderColor: config.colors.primary }]}
+              onPress={handleQRScan}
+              disabled={loading}
             >
-              <Text style={styles.closeButtonText}>✕</Text>
+              <Text style={styles.qrIcon}>📷</Text>
+              <Text style={[styles.qrButtonText, { color: config.colors.primary }]}>
+                סרוק קוד QR
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>או הזן טוקן</Text>
+              <View style={styles.dividerLine} />
+            </View>
+            
+            {/* שדה טוקן */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>
+                טוקן
+              </Text>
+              <TextInput
+                ref={tokenInputRef}
+                style={[
+                  styles.input,
+                  { borderColor: error ? '#ef4444' : config.colors.secondary }
+                ]}
+                value={token}
+                onChangeText={(text: string) => {
+                  setToken(text);
+                  setError('');
+                }}
+                onFocus={handleTokenInputFocus}
+                placeholder="הזן טוקן"
+                textAlign="right"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+                returnKeyType="done"
+                onSubmitEditing={() => tokenInputRef.current?.blur()}
+              />
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            </View>
+            
+            <TouchableOpacity
+              style={[
+                styles.loginButton,
+                { backgroundColor: config.colors.primary },
+                loading && styles.disabled
+              ]}
+              onPress={() => handleLogin()}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Text style={styles.loginText}>התחבר</Text>
+              )}
             </TouchableOpacity>
           </View>
-          
-          {hasPermission === null ? (
-            <View style={styles.qrScannerContent}>
-              <Text style={styles.permissionText}>מבקש הרשאת מצלמה...</Text>
+        </ScrollView>
+
+        {/* QR Scanner Modal */}
+        <Modal
+          visible={showQRScanner}
+          animationType="slide"
+          onRequestClose={() => setShowQRScanner(false)}
+        >
+          <View style={styles.qrScannerContainer}>
+            <View style={styles.qrScannerHeader}>
+              <Text style={styles.qrScannerTitle}>סרוק קוד QR</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowQRScanner(false)}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
             </View>
-          ) : hasPermission === false ? (
-            <View style={styles.qrScannerContent}>
-              <Text style={styles.permissionText}>אין גישה למצלמה</Text>
-            </View>
-          ) : (
-            <CameraView
-              style={styles.camera}
-              facing="back"
-              onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-              barcodeScannerSettings={{
-                barcodeTypes: ['qr'],
-              }}
-            >
-              <View style={styles.qrFrame}>
-                <View style={[styles.qrCorner, styles.topLeft]} />
-                <View style={[styles.qrCorner, styles.topRight]} />
-                <View style={[styles.qrCorner, styles.bottomLeft]} />
-                <View style={[styles.qrCorner, styles.bottomRight]} />
+            
+            {hasPermission === null ? (
+              <View style={styles.qrScannerContent}>
+                <Text style={styles.permissionText}>מבקש הרשאת מצלמה...</Text>
               </View>
-              <Text style={styles.qrInstructions}>
-                מקם את קוד ה-QR במרכז המסגרת
-              </Text>
-            </CameraView>
-          )}
-        </View>
-      </Modal>
-      <SuccessModal 
-        visible={showSuccessModal} 
-        onContinue={() => {
-          setShowSuccessModal(false);
-          router.push({
-            pathname: '/Home',
-            params: {}
-          });
-        }} 
-      />
-      <LogoutModal
-        visible={showLogoutModal}
-        message={logoutMessage || ''}
-        onConfirm={() => setShowLogoutModal(false)}
-      />
-    </View>
+            ) : hasPermission === false ? (
+              <View style={styles.qrScannerContent}>
+                <Text style={styles.permissionText}>אין גישה למצלמה</Text>
+              </View>
+            ) : (
+              <CameraView
+                style={styles.camera}
+                facing="back"
+                onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+                barcodeScannerSettings={{
+                  barcodeTypes: ['qr'],
+                }}
+              >
+                <View style={styles.qrFrame}>
+                  <View style={[styles.qrCorner, styles.topLeft]} />
+                  <View style={[styles.qrCorner, styles.topRight]} />
+                  <View style={[styles.qrCorner, styles.bottomLeft]} />
+                  <View style={[styles.qrCorner, styles.bottomRight]} />
+                </View>
+                <Text style={styles.qrInstructions}>
+                  מקם את קוד ה-QR במרכז המסגרת
+                </Text>
+              </CameraView>
+            )}
+          </View>
+        </Modal>
+        <SuccessModal 
+          visible={showSuccessModal} 
+          onContinue={() => {
+            setShowSuccessModal(false);
+            router.push({
+              pathname: '/Home',
+              params: {}
+            });
+          }} 
+        />
+        <LogoutModal
+          visible={showLogoutModal}
+          message={logoutMessage || ''}
+          onConfirm={() => setShowLogoutModal(false)}
+        />
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -429,6 +459,9 @@ const styles = StyleSheet.create({
   title: { 
     fontSize: 24, 
     fontWeight: 'bold' 
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: { 
     flex: 1, 

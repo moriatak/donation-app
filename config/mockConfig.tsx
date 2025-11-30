@@ -15,7 +15,7 @@ export interface SynagogueConfig {
     companyId: string,
     copmainingId: string,
     copmainingToken: string,
-    terminalName: string,
+    paxShopNum: string,
     auto_return_seconds: number;
     idle_timeout_seconds: number;
     require_id: boolean;
@@ -67,7 +67,7 @@ export const MOCK_QR_CONFIG: SynagogueConfig = {
     companyId: '',
     copmainingId: '',
     copmainingToken: '',
-    terminalName: '',
+    paxShopNum: '',
     auto_return_seconds: 60,
     idle_timeout_seconds: 120,
     require_id: true,

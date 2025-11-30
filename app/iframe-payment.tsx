@@ -14,7 +14,7 @@ export default function BitPaymentScreen() {
   const [loading, setLoading] = useState(true);
   const [paymentUrl, setPaymentUrl] = useState('');
   const [docToken, setDocToken] = useState('');
-  const [idDoc, setIdDoc] = useState('');
+  const [docId, setDocId] = useState('');
   const [polling, setPolling] = useState(false); 
   const [pollingCount, setPollingCount] = useState(0); 
   const reactId = useId();
@@ -75,7 +75,7 @@ export default function BitPaymentScreen() {
       if (paymentResponse.success && paymentResponse.paymentUrl) {
         setPaymentUrl(paymentResponse.paymentUrl);
         setDocToken(paymentResponse.docToken);
-        setIdDoc(paymentResponse.idDoc);
+        setDocId(paymentResponse.docId);
         setLoading(false);
         setPolling(true); 
       } else {
@@ -101,12 +101,12 @@ export default function BitPaymentScreen() {
       formData.append('apiBit', '123456789bit'); // 👈 שנה למפתח האמיתי שלך
   
       // הדפסת הבקשה ללוג לפני שליחה
-      console.log('======== PAYMENT REQUEST ========');
-      console.log('URL: https://tak.co.il/cashier/bit/bitConfirm.php');
-      console.log('METHOD: POST');
-      console.log('HEADERS: Content-Type: application/json');
-      console.log('BODY (object):', Object.fromEntries(formData)); 
-      console.log('================================');
+      // console.log('======== PAYMENT REQUEST ========');
+      // console.log('URL: https://tak.co.il/cashier/bit/bitConfirm.php');
+      // console.log('METHOD: POST');
+      // console.log('HEADERS: Content-Type: application/json');
+      // console.log('BODY (object):', Object.fromEntries(formData)); 
+      // console.log('================================');
 
       const response = await fetch('https://tak.co.il/cashier/bit/bitConfirm.php', {
         method: 'POST',
@@ -126,7 +126,7 @@ export default function BitPaymentScreen() {
           pathname: '/success',
           params: {
             ...params,
-            idDoc: idDoc,
+            docId: docId,
           },
         });
       }

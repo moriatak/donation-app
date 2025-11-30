@@ -58,7 +58,7 @@ export default function SplashScreen() {
       {/* <Text style={styles.icon}>🕍</Text> */}
       <Image source={{ uri: 'https://tak.co.il/new/images/logo_splash.png' }} style={styles.methodIcon} />
       <Text style={[styles.title, { color: config.colors.primary }]}>
-        מערכת תרומות
+        מסופון תרומות
       </Text>
       <ActivityIndicator 
         size="large" 

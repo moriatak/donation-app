@@ -18,6 +18,11 @@ export const getAvailablePaymentMethods = (paymentOptions: any[], isMonthly: str
 
 };
 
+// הפונקציה בודקת אם יש אפשרות של הוראת קבע באפשרויות תשלום
+export const hasRecurringPaymentMethod = (paymentOptions: any[]): boolean => {
+  return paymentOptions.some(method => method.type.includes('recurring_payment'));
+};
+
 export const navigateToPaymentMethod = (router: any, nextAction: NextActionApp, type: string, params: any) => {
   if (nextAction === 'iframe') {
     router.push({

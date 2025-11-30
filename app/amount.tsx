@@ -1,5 +1,6 @@
 import { AuthGuard } from '@/context/AuthGuard';
 import { useConfig } from '@/context/configContext';
+import { hasRecurringPaymentMethod } from '@/utils/paymentUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -18,249 +19,306 @@ export default function AmountScreen() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [isMonthly, setIsMonthly] = useState(false);
-const [monthsCount, setMonthsCount] = useState('unlimited');
-const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [monthsCount, setMonthsCount] = useState('unlimited');
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
-const scrollViewRef = useRef<ScrollView>(null);
-const customAmountRef = useRef<TextInput>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const customAmountRef = useRef<TextInput>(null);
 
   const finalAmount = customAmount || selectedAmount;
   const totalAmount = finalAmount && isMonthly && monthsCount !== 'unlimited' 
-  ? Number(finalAmount) * Number(monthsCount) 
-  : finalAmount;
+    ? Number(finalAmount) * Number(monthsCount) 
+    : finalAmount;
+
+  // פונקציה לבדיקת תקינות הסכום
+  const validateAmount = (): boolean => {
+    const amount = Number(finalAmount);
+    return amount > 0;
+  };
+
+  // פונקציה לטיפול בלחיצה על כפתור המשך
+  const handleContinue = () => {
+    if (!finalAmount) return;
+    
+    if (!validateAmount()) {
+      setShowErrorModal(true);
+      return;
+    }
+
+    router.push({
+      // pathname: '/details', // כרגע אליהו ביקש שיהיה בלי זיהוי עם הזנה מלאה
+      pathname: '/phone-verification', 
+      params: { 
+        ...params, 
+        amount: finalAmount?.toString(),
+        isMonthly: isMonthly.toString(),
+        monthsCount: isMonthly ? monthsCount : '1',
+        totalAmount: totalAmount?.toString()
+      }
+    });
+  };
+  const canOfferMonthlyPayment = hasRecurringPaymentMethod(config.settings.paymentOptions);
 
   return (
     <AuthGuard>
-       <KeyboardAvoidingView 
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      <View style={[styles.container, { backgroundColor: config.colors.background }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
-          </TouchableOpacity>
-          <Text style={[styles.title, { color: config.colors.primary }]}>בחירת סכום</Text>
-          <View style={{ width: 80 }} />
-        </View>
-        
-        <ScrollView 
-            ref={scrollViewRef}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-          <View style={[styles.targetBox, { borderColor: config.colors.secondary }]}>
-            <Text style={styles.targetIcon}>{target.icon}</Text>
-            <Text style={[styles.targetName, { color: config.colors.primary }]}>
-              {target.name}
-            </Text>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <View style={[styles.container, { backgroundColor: config.colors.background }]}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Text style={[styles.backButtonText, { color: config.colors.primary }]}>← חזור</Text>
+            </TouchableOpacity>
+            <Text style={[styles.title, { color: config.colors.primary }]}>בחירת סכום</Text>
+            <View style={{ width: 80 }} />
           </View>
           
-          <View style={styles.grid}>
-            {config.quick_amounts.map((amount) => (
-              <TouchableOpacity
-                key={amount}
-                onPress={() => {
-                  setSelectedAmount(amount);
-                  setCustomAmount('');
-                }}
-                style={[
-                  styles.amountButton,
-                  { borderColor: config.colors.secondary },
-                  selectedAmount === amount && !customAmount && {
-                    backgroundColor: config.colors.primary
-                  }
-                ]}
-              >
-                <Text style={[
-                  styles.amountText,
-                  { color: selectedAmount === amount && !customAmount ? 'white' : config.colors.primary }
-                ]}>
-                  ₪{amount}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          
-          <View style={[styles.customBox, { borderColor: config.colors.secondary }]}>
-            <Text style={[styles.label, { color: config.colors.primary }]}>סכום אחר</Text>
-            <View style={styles.inputWrapper}>
-            <TextInput
-                ref={customAmountRef}
-                style={[styles.input, { borderColor: config.colors.secondary }]}
-                value={customAmount}
-                onChangeText={(text) => {
-                  setCustomAmount(text);
-                  setSelectedAmount(null);
-                }}
-                onFocus={() => {
-                  setTimeout(() => {
-                    customAmountRef.current?.measure((fx, fy, width, height, px, py) => {
-                      scrollViewRef.current?.scrollTo({
-                        y: py - 150, // גלילה לשדה עם מרווח
-                        animated: true,
-                      });
-                    });
-                  }, 100);
-                }}
-                placeholder="הזן סכום"
-                keyboardType="numeric"
-                textAlign="right"
-                returnKeyType="done"
-                onSubmitEditing={() => customAmountRef.current?.blur()}
-              />
-              <Text style={styles.currency}>₪</Text>
+          <ScrollView 
+              ref={scrollViewRef}
+              contentContainerStyle={styles.content}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+            <View style={[styles.targetBox, { borderColor: config.colors.secondary }]}>
+              <Text style={styles.targetIcon}>{target.icon}</Text>
+              <Text style={[styles.targetName, { color: config.colors.primary }]}>
+                {target.name}
+              </Text>
             </View>
-          </View>
-          <View style={[styles.monthlyBox, { borderColor: config.colors.secondary }]}>
-    <View style={styles.monthlyHeader}>
-      <View style={styles.monthlyIconContainer}>
-        <Text style={styles.monthlyIcon}>🔄</Text>
-      </View>
-      <View style={styles.monthlyTextContainer}>
-        <Text style={[styles.monthlyLabel, { color: config.colors.primary }]}>
-          תרומה חודשית
-        </Text>
-        <Text style={styles.monthlySubtext}>
-          תרומה קבועה כל חודש
-        </Text>
-      </View>
-      <Switch
-        value={isMonthly}
-        onValueChange={setIsMonthly}
-        trackColor={{ false: '#d1d5db', true: config.colors.secondary }}
-        thumbColor={isMonthly ? config.colors.primary : '#f4f3f4'}
-      />
-    </View>
-    
-    {isMonthly && (
-      <View style={styles.monthsInputContainer}>
-        <Text style={[styles.monthsLabel, { color: config.colors.primary }]}>
-          למשך:
-        </Text>
-        <TouchableOpacity 
-          style={[styles.pickerButton, { borderColor: config.colors.secondary }]}
-          onPress={() => setShowMonthPicker(true)}
-        >
-          <Text style={[styles.pickerText, { color: config.colors.primary }]}>
-            {monthsCount === 'unlimited' 
-              ? 'ללא הגבלה' 
-              : `${monthsCount} ${Number(monthsCount) === 1 ? 'חודש' : 'חודשים'}`}
-          </Text>
-          <Text style={styles.pickerArrow}>▼</Text>
-        </TouchableOpacity>
-        {/* כאן ה-TouchableOpacity של הפיקר */}
-      </View>
-    )}
-  </View>
-
-      
-
-  {/* Modal לבחירת חודשים */}
-  <Modal
-    visible={showMonthPicker}
-    transparent={true}
-    animationType="fade"
-    onRequestClose={() => setShowMonthPicker(false)}
-  >
-    <TouchableOpacity 
-      style={styles.modalOverlay}
-      activeOpacity={1}
-      onPress={() => setShowMonthPicker(false)}
-    >
-      <View style={styles.modalContent}>
-        <View style={[styles.modalHeader, { backgroundColor: config.colors.primary }]}>
-          <Text style={styles.modalTitle}>בחר משך תרומה</Text>
+            
+            <View style={styles.grid}>
+              {config.quick_amounts.map((amount) => (
+                <TouchableOpacity
+                  key={amount}
+                  onPress={() => {
+                    setSelectedAmount(amount);
+                    setCustomAmount('');
+                  }}
+                  style={[
+                    styles.amountButton,
+                    { borderColor: config.colors.secondary },
+                    selectedAmount === amount && !customAmount && {
+                      backgroundColor: config.colors.primary
+                    }
+                  ]}
+                >
+                  <Text style={[
+                    styles.amountText,
+                    { color: selectedAmount === amount && !customAmount ? 'white' : config.colors.primary }
+                  ]}>
+                    ₪{amount}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            <View style={[styles.customBox, { borderColor: config.colors.secondary }]}>
+              <Text style={[styles.label, { color: config.colors.primary }]}>סכום אחר</Text>
+              <View style={styles.inputWrapper}>
+              <TextInput
+                  ref={customAmountRef}
+                  style={[styles.input, { borderColor: config.colors.secondary }]}
+                  value={customAmount}
+                  onChangeText={(text) => {
+                    // מסנן רק מספרים חיוביים - מסיר כל דבר שאינו ספרה או נקודה
+                    const filteredText = text.replace(/[^0-9.]/g, '');
+                    // מוודא שיש רק נקודה אחת לכל היותר
+                    const parts = filteredText.split('.');
+                    const validText = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredText;
+                    
+                    setCustomAmount(validText);
+                    setSelectedAmount(null);
+                  }}
+                  onFocus={() => {
+                    setTimeout(() => {
+                      customAmountRef.current?.measure((fx, fy, width, height, px, py) => {
+                        scrollViewRef.current?.scrollTo({
+                          y: py - 150, // גלילה לשדה עם מרווח
+                          animated: true,
+                        });
+                      });
+                    }, 100);
+                  }}
+                  placeholder="הזן סכום"
+                  keyboardType="numeric"
+                  textAlign="right"
+                  returnKeyType="done"
+                  onSubmitEditing={() => customAmountRef.current?.blur()}
+                />
+                <Text style={styles.currency}>₪</Text>
+              </View>
+            </View>
+            {canOfferMonthlyPayment &&<View style={[styles.monthlyBox, { borderColor: config.colors.secondary }]}>
+       <View style={styles.monthlyHeader}>
+        <View style={styles.monthlyIconContainer}>
+          <Text style={styles.monthlyIcon}>🔄</Text>
         </View>
-        
-        <ScrollView style={styles.optionsList}>
-          <TouchableOpacity
-            style={[
-              styles.optionItem,
-              monthsCount === 'unlimited' && { backgroundColor: '#f0fdf4' }
-            ]}
-            onPress={() => {
-              setMonthsCount('unlimited');
-              setShowMonthPicker(false);
-            }}
+        <View style={styles.monthlyTextContainer}>
+          <Text style={[styles.monthlyLabel, { color: config.colors.primary }]}>
+            תרומה חודשית
+          </Text>
+          <Text style={styles.monthlySubtext}>
+            תרומה קבועה כל חודש
+          </Text>
+        </View>
+        <Switch
+          value={isMonthly}
+          onValueChange={setIsMonthly}
+          trackColor={{ false: '#d1d5db', true: config.colors.secondary }}
+          thumbColor={isMonthly ? config.colors.primary : '#f4f3f4'}
+        />
+      </View>
+      
+      {isMonthly && (
+        <View style={styles.monthsInputContainer}>
+          <Text style={[styles.monthsLabel, { color: config.colors.primary }]}>
+            למשך:
+          </Text>
+          <TouchableOpacity 
+            style={[styles.pickerButton, { borderColor: config.colors.secondary }]}
+            onPress={() => setShowMonthPicker(true)}
           >
-            <Text style={[
-              styles.optionText,
-              { color: config.colors.primary },
-              monthsCount === 'unlimited' && { fontWeight: 'bold' }
-            ]}>
-              ללא הגבלה
+            <Text style={[styles.pickerText, { color: config.colors.primary }]}>
+              {monthsCount === 'unlimited' 
+                ? 'ללא הגבלה' 
+                : `${monthsCount} ${Number(monthsCount) === 1 ? 'חודש' : 'חודשים'}`}
             </Text>
-            {monthsCount === 'unlimited' && (
-              <Text style={styles.checkmark}>✓</Text>
-            )}
+            <Text style={styles.pickerArrow}>▼</Text>
           </TouchableOpacity>
+        </View>
+      )}
+    </View>}
+
+    {/* Modal לבחירת חודשים */}
+    <Modal
+      visible={showMonthPicker}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowMonthPicker(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={() => setShowMonthPicker(false)}
+      >
+        <View style={styles.modalContent}>
+          <View style={[styles.modalHeader, { backgroundColor: config.colors.primary }]}>
+            <Text style={styles.modalTitle}>בחר משך תרומה</Text>
+          </View>
           
-          {Array.from({ length: 24 }, (_, i) => 24 - i).map((num) => (
+          <ScrollView style={styles.optionsList}>
             <TouchableOpacity
-              key={num}
               style={[
                 styles.optionItem,
-                monthsCount === num.toString() && { backgroundColor: '#f0fdf4' }
+                monthsCount === 'unlimited' && { backgroundColor: '#f0fdf4' }
               ]}
               onPress={() => {
-                setMonthsCount(num.toString());
+                setMonthsCount('unlimited');
                 setShowMonthPicker(false);
               }}
             >
               <Text style={[
                 styles.optionText,
                 { color: config.colors.primary },
-                monthsCount === num.toString() && { fontWeight: 'bold' }
+                monthsCount === 'unlimited' && { fontWeight: 'bold' }
               ]}>
-                {num} {num === 1 ? 'חודש' : 'חודשים'}
+                ללא הגבלה
               </Text>
-              {monthsCount === num.toString() && (
+              {monthsCount === 'unlimited' && (
                 <Text style={styles.checkmark}>✓</Text>
               )}
             </TouchableOpacity>
-          ))}
-          <View style={{ height: 100 }} />
-        </ScrollView>
-        
-        <TouchableOpacity
-          style={[styles.closeButton, { backgroundColor: config.colors.primary }]}
-          onPress={() => setShowMonthPicker(false)}
-        >
-          <Text style={styles.closeButtonText}>סגור</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  </Modal>
-
+            
+            {Array.from({ length: 24 }, (_, i) => 24 - i).map((num) => (
+              <TouchableOpacity
+                key={num}
+                style={[
+                  styles.optionItem,
+                  monthsCount === num.toString() && { backgroundColor: '#f0fdf4' }
+                ]}
+                onPress={() => {
+                  setMonthsCount(num.toString());
+                  setShowMonthPicker(false);
+                }}
+              >
+                <Text style={[
+                  styles.optionText,
+                  { color: config.colors.primary },
+                  monthsCount === num.toString() && { fontWeight: 'bold' }
+                ]}>
+                  {num} {num === 1 ? 'חודש' : 'חודשים'}
+                </Text>
+                {monthsCount === num.toString() && (
+                  <Text style={styles.checkmark}>✓</Text>
+                )}
+              </TouchableOpacity>
+            ))}
+            <View style={{ height: 100 }} />
+          </ScrollView>
+          
           <TouchableOpacity
-            style={[
-              styles.continueButton,
-              { backgroundColor: config.colors.primary },
-              !finalAmount && styles.disabled
-            ]}
-            onPress={() => router.push({
-              // pathname: '/details', // כרגע אליהו ביקש שיהיה בלי זיהוי עם הזנה מלאה
-              pathname: '/phone-verification', 
-              params: { 
-                  ...params, 
-                  amount: finalAmount?.toString(),
-                  isMonthly: isMonthly.toString(),
-                  monthsCount: isMonthly ? monthsCount : '1',
-                  totalAmount: totalAmount?.toString()
-              }
-              })}
-            disabled={!finalAmount}
+            style={[styles.closeButton, { backgroundColor: config.colors.primary }]}
+            onPress={() => setShowMonthPicker(false)}
           >
-            <Text style={styles.continueText}>המשך</Text>
+            <Text style={styles.closeButtonText}>סגור</Text>
           </TouchableOpacity>
-        </ScrollView>
-      </View>
-      </KeyboardAvoidingView>
-    </AuthGuard>
-  );
+        </View>
+      </TouchableOpacity>
+    </Modal>
+
+    {/* Modal שגיאה לסכום לא תקין */}
+    <Modal
+      visible={showErrorModal}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowErrorModal(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={() => setShowErrorModal(false)}
+      >
+        <View style={[styles.errorModalContent, { borderColor: '#ef4444' }]}>
+          <View style={styles.errorHeader}>
+            <Text style={styles.errorIcon}>⚠️</Text>
+            <Text style={[styles.errorTitle, { color: config.colors.primary }]}>
+              שגיאה
+            </Text>
+          </View>
+          
+          <Text style={[styles.errorMessage, { color: config.colors.primary }]}>
+            אנא הזן סכום גדול מ-0 ₪
+          </Text>
+          
+          <TouchableOpacity
+            style={[styles.errorButton, { backgroundColor: config.colors.primary }]}
+            onPress={() => setShowErrorModal(false)}
+          >
+            <Text style={styles.errorButtonText}>הבנתי</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+
+            <TouchableOpacity
+              style={[
+                styles.continueButton,
+                { backgroundColor: config.colors.primary },
+                !finalAmount && styles.disabled
+              ]}
+              onPress={handleContinue}
+              disabled={!finalAmount}
+            >
+              <Text style={styles.continueText}>המשך</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+        </KeyboardAvoidingView>
+      </AuthGuard>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -488,4 +546,48 @@ const styles = StyleSheet.create({
   },
   disabled: { backgroundColor: '#d1d5db', opacity: 0.5 },
   continueText: { color: 'white', fontSize: 22, fontWeight: 'bold' },
+  // סטיילים למודל השגיאה
+  errorModalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 30,
+    width: '90%',
+    maxWidth: 350,
+    alignItems: 'center',
+    borderWidth: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  errorHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  errorIcon: {
+    fontSize: 48,
+    marginBottom: 10,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  errorMessage: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 25,
+    lineHeight: 24,
+  },
+  errorButton: {
+    padding: 15,
+    borderRadius: 12,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  errorButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });

@@ -48,7 +48,6 @@ export default function HomeScreen() {
           });          
         },
         async (deviceStatus) => {
-          console.log('in deviceStatus', deviceStatus)
           // טיפול בעדכון גרסה
           const storeUrl = Platform.OS === 'ios' 
             ? deviceStatus.updateUrlIos || 'https://apps.apple.com/il/app/YOUR_APP_ID'

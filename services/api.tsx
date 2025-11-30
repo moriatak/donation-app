@@ -38,7 +38,8 @@ export interface SettingsResponse {
     compId: string;
     logo: string;
     donationAppName: string;
-    terminalName: string
+    paxShopNum: string;
+    showNameTerminal: boolean;
     items: Array<object>;
     paymentOptions: Array<paymentOption>
   };
@@ -77,15 +78,21 @@ export const TaktzivitAPI = {
     }
   ): Promise<PaymentResponse | any> => {
     try {
+      if(Number(paymentDataToPAy.amount) < 0){
+        throw new Error('סכום התרומה חייב להיות גדול מ-0 ₪')
+      }
       // יצירת אובייקט הבקשה שיישלח
       const requestBody = {
         token: config.settings.tokenApi,
         // apiToken: config.settings.tokenApi,
         companyId: config.settings.companyId,
         // token: config.settings.copmainingToken,
-        parentName: config.settings.terminalName,
+        siteName: config.synagogue.name,
+        parentName: 'app',
         parentId: config.settings.copmainingToken,
-        copmainingToken: config.settings.copmainingId, // Campaign ID
+        copmainingToken: config.settings.copmainingToken,
+        paxShopNum: config.settings.paxShopNum ? config.settings.paxShopNum.padStart(3, '0') : '001',
+        // copmainingToken: config.settings.copmainingId, // Campaign ID
         source: 'android', // חשוב! חייב להיות android
         
         paymentMethod: { 
@@ -170,15 +177,15 @@ export const TaktzivitAPI = {
           case 'typing':
             if (result.shvaCode && result.shvaCode.length >= 3 && /^\d{3}/.test(result.shvaCode)) {
               // בודק שיש לפחות 3 ספרות
-              console.log('התשלום אושר!');
-              console.log('קוד אישור:', result.shvaCode);
+              // console.log('התשלום אושר!');
+              // console.log('קוד אישור:', result.shvaCode);
               
               return { 
                 success: true, 
                 transactionId: result.transactionId || ('TRX' + Date.now()), 
                 status: 'completed',
                 shvaCode: result.shvaCode,
-                idDoc: result.idDoc
+                docId: result.docId
               };
             } else {
               console.log('התשלום נדחה:', result.shvaCode);
@@ -256,7 +263,8 @@ export const DonorAPI = {
               compId: dataToSave.Id,
               logo: dataToSave.LogoUrl,
               donationAppName: dataToSave.Name,
-              terminalName: dataToSave.nameTerminal,
+              paxShopNum: dataToSave.paxShopNum,
+              showNameTerminal: dataToSave.showNameTerminal,
               items: dataToSave.PageItems,
               paymentOptions: dataToSave.paymentOptions
             }
@@ -301,12 +309,12 @@ export const DonorAPI = {
         parameters.append('user_and_phone', 'true');
       }
       // הדפסת הבקשה ללוג לפני שליחה
-      console.log('======== LOGIN REQUEST ========');
-      console.log('URL: ',DONATION_API_ENDPOINT);
-      console.log('METHOD: POST');
-      console.log('HEADERS: Content-Type: application/json');
-      console.log('BODY:', JSON.stringify(parameters, null, 2));
-      console.log('================================');
+      // console.log('======== LOGIN REQUEST ========');
+      // console.log('URL: ',DONATION_API_ENDPOINT);
+      // console.log('METHOD: POST');
+      // console.log('HEADERS: Content-Type: application/json');
+      // console.log('BODY:', JSON.stringify(parameters, null, 2));
+      // console.log('================================');
 
       const response = await fetch(DONATION_API_ENDPOINT, {
         method: 'POST',
@@ -317,9 +325,9 @@ export const DonorAPI = {
         const responseData = await response.json();
         
         // הדפסת התשובה שהתקבלה
-        console.log('======== LOGIN RESPONSE ========');
-        console.log(JSON.stringify(responseData, null, 2));
-        console.log('=================================');
+        // console.log('======== LOGIN RESPONSE ========');
+        // console.log(JSON.stringify(responseData, null, 2));
+        // console.log('=================================');
 
         if (responseData.success === true) {
           return {
@@ -376,12 +384,12 @@ export const DonorAPI = {
         parameters.append('is_gabbay_code', 'true');
       }
         // הדפסת הבקשה ללוג לפני שליחה
-        console.log('======== LOGIN REQUEST ========');
-        console.log('URL: ',DONATION_API_ENDPOINT);
-        console.log('METHOD: POST');
-        console.log('HEADERS: Content-Type: application/json');
-        console.log('BODY:', JSON.stringify(parameters, null, 2));
-        console.log('================================');
+        // console.log('======== LOGIN REQUEST ========');
+        // console.log('URL: ',DONATION_API_ENDPOINT);
+        // console.log('METHOD: POST');
+        // console.log('HEADERS: Content-Type: application/json');
+        // console.log('BODY:', JSON.stringify(parameters, null, 2));
+        // console.log('================================');
 
       const response = await fetch(DONATION_API_ENDPOINT, {
         method: 'POST',
@@ -392,9 +400,9 @@ export const DonorAPI = {
         const responseData = await response.json();
 
          // הדפסת התשובה שהתקבלה
-         console.log('======== LOGIN RESPONSE ========');
-         console.log(JSON.stringify(responseData, null, 2));
-         console.log('=================================');
+        //  console.log('======== LOGIN RESPONSE ========');
+        //  console.log(JSON.stringify(responseData, null, 2));
+        //  console.log('=================================');
         
         if (responseData.success === true) {
           // השרת מחזיר את פרטי המשתמש מטבלת appc_contact
